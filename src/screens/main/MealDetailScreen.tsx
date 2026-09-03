@@ -211,7 +211,7 @@ const makeStyles = (t: Theme) =>
 
     hero: {
       paddingHorizontal: space(6),
-      paddingTop: space(16),
+      paddingTop: space(7),
       paddingBottom: space(7),
       gap: space(1),
       borderBottomLeftRadius: radius.xxl,

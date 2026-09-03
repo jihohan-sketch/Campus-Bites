@@ -70,13 +70,7 @@ export function RootNavigator() {
         <Stack.Screen
           name="MealDetail"
           component={MealDetailScreen}
-          // The back arrow sits on the meal's gradient, so it takes that
-          // header's ink — white would vanish on 조식's warm yellow.
-          options={({ route }) => ({
-            title: '',
-            headerTransparent: true,
-            headerTintColor: theme.meal[route.params.meal.type].ink,
-          })}
+          options={{ title: '' }}
         />
 
         <Stack.Group screenOptions={{ headerShown: false, presentation: 'modal' }}>
