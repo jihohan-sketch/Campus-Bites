@@ -133,8 +133,21 @@ export async function getRaterId(uid: string | null): Promise<string> {
   }
 }
 
-/** True when ratings are stored on this device instead of shared with a school. */
+/**
+ * True when ratings are stored on this device instead of shared with a school.
+ *
+ * Reading and writing are gated differently on purpose. `mealRatings` is world
+ * readable, so a signed-out student still sees the real feed and the real
+ * average — only writing needs an account, because the rules key every rating
+ * to `request.auth.uid`. Without a Firebase project at all, both stay local.
+ */
 export const isLocalOnly = (): boolean => !isFirebaseConfigured();
+
+/**
+ * True when this student may leave a rating: signed in, or on a device-local
+ * install where there is no one else to share it with anyway.
+ */
+export const canRate = (uid: string | null): boolean => isLocalOnly() || Boolean(uid);
 
 /* -------------------------------------------------------------------------- */
 /* Reads and writes                                                            */
@@ -204,6 +217,11 @@ export async function submitMealRating(
   input: MealRatingInput,
   rater: { raterId: string; profile: UserProfile | null },
 ): Promise<MealRating> {
+  if (!canRate(rater.profile?.uid ?? null)) {
+    // The rules would reject this anyway; failing here keeps the message useful.
+    throw new Error('평가를 남기려면 로그인해 주세요.');
+  }
+
   const serviceKey = serviceKeyOf(input.schoolKey, input.date, input.mealType);
   const id = ratingIdOf(serviceKey, rater.raterId);
   const comment = input.comment.trim().slice(0, RATING_COMMENT_LIMIT);

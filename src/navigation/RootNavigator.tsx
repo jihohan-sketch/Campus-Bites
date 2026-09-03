@@ -1,6 +1,11 @@
-import { DefaultTheme, NavigationContainer, type Theme } from '@react-navigation/native';
+import {
+  DarkTheme,
+  DefaultTheme,
+  NavigationContainer,
+  type Theme as NavigationTheme,
+} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { useAuth } from '../context/AuthContext';
 import { AddFriendScreen } from '../screens/main/AddFriendScreen';
@@ -11,24 +16,11 @@ import { SchoolSetupScreen } from '../screens/onboarding/SchoolSetupScreen';
 import { SignInScreen } from '../screens/auth/SignInScreen';
 import { SignUpScreen } from '../screens/auth/SignUpScreen';
 import { SplashScreen } from '../screens/SplashScreen';
-import { colors, type } from '../theme';
+import { type, useTheme } from '../theme';
 import { MainTabs } from './MainTabs';
 import type { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-
-const navigationTheme: Theme = {
-  ...DefaultTheme,
-  colors: {
-    ...DefaultTheme.colors,
-    primary: colors.brand,
-    background: colors.background,
-    card: colors.surface,
-    text: colors.text,
-    border: colors.border,
-    notification: colors.brand,
-  },
-};
 
 /**
  * Guest-first navigation: 급식표 opens immediately with no login or setup.
@@ -36,6 +28,23 @@ const navigationTheme: Theme = {
  */
 export function RootNavigator() {
   const { initializing } = useAuth();
+  const theme = useTheme();
+
+  const navigationTheme = useMemo<NavigationTheme>(() => {
+    const base = theme.isDark ? DarkTheme : DefaultTheme;
+    return {
+      ...base,
+      colors: {
+        ...base.colors,
+        primary: theme.colors.brand,
+        background: theme.colors.background,
+        card: theme.colors.surface,
+        text: theme.colors.text,
+        border: theme.colors.border,
+        notification: theme.colors.brand,
+      },
+    };
+  }, [theme]);
 
   if (initializing) {
     return <SplashScreen />;
@@ -46,21 +55,28 @@ export function RootNavigator() {
       <Stack.Navigator
         screenOptions={{
           headerShadowVisible: false,
+          headerLargeTitleShadowVisible: false,
           headerTitleStyle: {
-            fontFamily: type.subheading.fontFamily,
+            fontFamily: type.heading.fontFamily,
             fontSize: type.subheading.fontSize,
-            fontWeight: type.subheading.fontWeight,
+            fontWeight: type.heading.fontWeight,
           },
-          headerStyle: { backgroundColor: colors.background },
-          headerTintColor: colors.text,
-          contentStyle: { backgroundColor: colors.background },
+          headerStyle: { backgroundColor: theme.colors.background },
+          headerTintColor: theme.colors.text,
+          contentStyle: { backgroundColor: theme.colors.background },
         }}
       >
         <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
         <Stack.Screen
           name="MealDetail"
           component={MealDetailScreen}
-          options={{ title: '', headerTransparent: true, headerTintColor: colors.white }}
+          // The back arrow sits on the meal's gradient, so it takes that
+          // header's ink — white would vanish on 조식's warm yellow.
+          options={({ route }) => ({
+            title: '',
+            headerTransparent: true,
+            headerTintColor: theme.meal[route.params.meal.type].ink,
+          })}
         />
 
         <Stack.Group screenOptions={{ headerShown: false, presentation: 'modal' }}>

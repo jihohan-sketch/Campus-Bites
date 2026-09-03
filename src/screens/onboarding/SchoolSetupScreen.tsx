@@ -12,7 +12,7 @@ import { describeAuthError } from '../../config/firebase';
 import { useAuth } from '../../context/AuthContext';
 import type { RootStackParamList } from '../../navigation/types';
 import { updateProfile } from '../../services/profile';
-import { colors, space, type } from '../../theme';
+import { radius, space, type as text, useStyles, useTheme, type Theme } from '../../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SchoolSetup'>;
 
@@ -21,6 +21,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'SchoolSetup'>;
  * screen only collects where in the school the student is.
  */
 export function SchoolSetupScreen({ navigation, route }: Props) {
+  const t = useTheme();
+  const styles = useStyles(makeStyles);
   const { mode } = route.params;
   const { profile } = useAuth();
 
@@ -63,10 +65,10 @@ export function SchoolSetupScreen({ navigation, route }: Props) {
       >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
-            <Text style={[type.title, styles.title]}>
+            <Text style={[text.title, styles.title]}>
               {mode === 'onboarding' ? '어느 반이신가요?' : '학년 · 반 변경'}
             </Text>
-            <Text style={[type.body, styles.subtitle]}>
+            <Text style={[text.body, styles.subtitle]}>
               친구들이 알아보기 쉬워져요. 나중에 언제든 바꿀 수 있어요.
             </Text>
           </View>
@@ -74,8 +76,8 @@ export function SchoolSetupScreen({ navigation, route }: Props) {
           <Card style={styles.schoolCard}>
             <Text style={styles.schoolEmoji}>🏫</Text>
             <View style={styles.schoolText}>
-              <Text style={[type.bodyStrong, styles.schoolName]}>{APP_SCHOOL.schoolName}</Text>
-              <Text style={[type.caption, styles.schoolMeta]}>
+              <Text style={[text.bodyStrong, styles.schoolName]}>{APP_SCHOOL.schoolName}</Text>
+              <Text style={[text.caption, styles.schoolMeta]}>
                 {APP_SCHOOL_EN} · {APP_SCHOOL.region}
               </Text>
             </View>
@@ -102,7 +104,7 @@ export function SchoolSetupScreen({ navigation, route }: Props) {
             />
           </View>
 
-          {error ? <Text style={[type.caption, styles.error]}>{error}</Text> : null}
+          {error ? <Text style={[text.caption, styles.error]}>{error}</Text> : null}
 
           <Button
             label={mode === 'onboarding' ? '시작하기' : '저장하기'}
@@ -127,18 +129,19 @@ function parseOptionalInt(value: string): number | null {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  content: { padding: space(5), gap: space(5), flexGrow: 1, justifyContent: 'center' },
-  header: { gap: space(2) },
-  title: { color: colors.text },
-  subtitle: { color: colors.textSecondary },
-  schoolCard: { flexDirection: 'row', alignItems: 'center', gap: space(3) },
-  schoolEmoji: { fontSize: 28 },
-  schoolText: { flex: 1, gap: space(0.5) },
-  schoolName: { color: colors.text },
-  schoolMeta: { color: colors.textMuted },
-  classRow: { flexDirection: 'row', gap: space(3) },
-  classField: { flex: 1 },
-  error: { color: colors.danger },
-});
+const makeStyles = (t: Theme) =>
+  StyleSheet.create({
+    flex: { flex: 1 },
+    content: { padding: space(5), gap: space(5), flexGrow: 1, justifyContent: 'center' },
+    header: { gap: space(2) },
+    title: { color: t.colors.text },
+    subtitle: { color: t.colors.textSecondary },
+    schoolCard: { flexDirection: 'row', alignItems: 'center', gap: space(3) },
+    schoolEmoji: { fontSize: 28 },
+    schoolText: { flex: 1, gap: space(0.5) },
+    schoolName: { color: t.colors.text },
+    schoolMeta: { color: t.colors.textMuted },
+    classRow: { flexDirection: 'row', gap: space(3) },
+    classField: { flex: 1 },
+    error: { color: t.colors.danger },
+  });

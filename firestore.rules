@@ -7,14 +7,32 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Only Valor accounts may write anything. The client checks the domain too,
+    // but that is only for the error message — this is the enforcement, and it
+    // must stay in step with `APP_SCHOOL_EMAIL_DOMAIN` in src/config/school.ts.
+    function schoolMember() {
+      return signedIn()
+        && request.auth.token.email is string
+        && request.auth.token.email.lower().matches('^[^@]+@valorschool\\.org$');
+    }
+
     function isSelf(uid) {
-      return signedIn() && request.auth.uid == uid;
+      return schoolMember() && request.auth.uid == uid;
+    }
+
+    // The published 식단표. This is the one collection a signed-out student
+    // must be able to read: 급식표 is the app's guest-first screen. Writes are
+    // closed — menus go in through the Firebase console or an admin script,
+    // never from the app.
+    match /menus/{menuId} {
+      allow read: if true;
+      allow write: if false;
     }
 
     // Profiles are readable by any signed-in student so friend codes can be
     // looked up, but only the owner may write their own.
     match /users/{uid} {
-      allow read: if signedIn();
+      allow read: if schoolMember();
       allow create: if isSelf(uid);
       allow update: if isSelf(uid);
       allow delete: if isSelf(uid);
@@ -30,14 +48,14 @@ service cloud.firestore {
 
     // Invites: the sender creates, either side deletes.
     match /friendRequests/{requestId} {
-      allow read: if signedIn()
+      allow read: if schoolMember()
         && (request.auth.uid == resource.data.fromUid
             || request.auth.uid == resource.data.toUid);
-      allow create: if signedIn()
+      allow create: if schoolMember()
         && request.auth.uid == request.resource.data.fromUid
         && request.resource.data.toUid is string
         && request.resource.data.toUid != request.auth.uid;
-      allow delete: if signedIn()
+      allow delete: if schoolMember()
         && (request.auth.uid == resource.data.fromUid
             || request.auth.uid == resource.data.toUid);
       allow update: if false;
@@ -46,8 +64,8 @@ service cloud.firestore {
     // Crowd reports are append-only: anyone signed in can read the feed for
     // their school, and only the author can file or remove their own report.
     match /crowdReports/{reportId} {
-      allow read: if signedIn();
-      allow create: if signedIn()
+      allow read: if schoolMember();
+      allow create: if schoolMember()
         && request.auth.uid == request.resource.data.authorUid
         && request.resource.data.level is int
         && request.resource.data.level >= 1
@@ -58,14 +76,17 @@ service cloud.firestore {
         && request.resource.data.schoolKey is string
         && request.resource.data.note.size() <= 120;
       allow update: if false;
-      allow delete: if signedIn() && request.auth.uid == resource.data.authorUid;
+      allow delete: if schoolMember() && request.auth.uid == resource.data.authorUid;
     }
 
     // One rating per student per meal service. The document id carries the
     // rater, so a student can revise their own verdict but never add a second.
     match /mealRatings/{ratingId} {
-      allow read: if signedIn();
-      allow create, update: if signedIn()
+      // Public, like the 식단표: a student deciding whether to walk over should
+      // see today's score without signing in first. Writing still needs an
+      // account, so the average can never be padded by anonymous traffic.
+      allow read: if true;
+      allow create, update: if schoolMember()
         && request.auth.uid == request.resource.data.raterId
         && ratingId == request.resource.data.serviceKey + '_' + request.auth.uid
         && request.resource.data.stars is int
@@ -74,13 +95,13 @@ service cloud.firestore {
         && request.resource.data.schoolKey is string
         && request.resource.data.date is string
         && request.resource.data.comment.size() <= 140;
-      allow delete: if signedIn() && request.auth.uid == resource.data.raterId;
+      allow delete: if schoolMember() && request.auth.uid == resource.data.raterId;
     }
 
     // Presence powers Friend Radar. Readable by signed-in students, writable
     // only by the student it describes.
     match /presence/{uid} {
-      allow read: if signedIn();
+      allow read: if schoolMember();
       allow write: if isSelf(uid)
         && request.resource.data.uid == uid;
     }

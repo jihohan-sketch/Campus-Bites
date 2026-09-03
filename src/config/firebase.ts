@@ -95,6 +95,19 @@ export function describeAuthError(error: unknown): string {
       return '시도가 너무 많아요. 잠시 후 다시 해 주세요.';
     case 'auth/network-request-failed':
       return '네트워크에 연결할 수 없어요.';
+    case 'auth/popup-closed-by-user':
+    case 'auth/cancelled-popup-request':
+      return '구글 로그인이 취소됐어요.';
+    case 'auth/popup-blocked':
+      return '브라우저가 팝업을 막았어요. 팝업을 허용하고 다시 시도해 주세요.';
+    case 'auth/account-exists-with-different-credential':
+      return '같은 이메일로 이미 가입돼 있어요. 이메일과 비밀번호로 로그인해 주세요.';
+    case 'auth/unauthorized-domain':
+      // Setup slip, not a student mistake: the deploy URL is missing from
+      // Firebase console → Authentication → Settings → Authorized domains.
+      return '이 주소는 로그인 허용 목록에 없어요. 관리자에게 알려 주세요.';
+    case 'auth/operation-not-allowed':
+      return '이 로그인 방법이 아직 켜져 있지 않아요. 관리자에게 알려 주세요.';
     case 'permission-denied':
       return '권한이 없어요. 다시 로그인해 주세요.';
     case 'unavailable':

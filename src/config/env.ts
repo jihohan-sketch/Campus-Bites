@@ -18,13 +18,6 @@ function read(envValue: string | undefined, extraKey: string): string {
   return (envValue ?? '').trim() || fromExtra(extraKey);
 }
 
-/**
- * NEIS API key. Optional: open.neis.go.kr serves anonymous requests, capped at
- * 100 rows per call, which is plenty for a single school. Supplying a key
- * raises the daily quota.
- */
-export const NEIS_API_KEY = read(process.env.EXPO_PUBLIC_NEIS_API_KEY, 'neisApiKey');
-
 export interface FirebaseConfig {
   apiKey: string;
   authDomain: string;

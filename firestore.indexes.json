@@ -1,6 +1,20 @@
 {
   "indexes": [
     {
+      "collectionGroup": "menus",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "schoolKey",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "date",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "crowdReports",
       "queryScope": "COLLECTION",
       "fields": [

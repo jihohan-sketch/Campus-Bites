@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React, { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, radius, space, type } from '../theme';
+import { radius, space, type as text, useStyles, useTheme, type Theme } from '../theme';
 import {
   addDays,
   daysBetween,
@@ -13,6 +13,7 @@ import {
   todayInKst,
   type CivilDate,
 } from '../utils/date';
+import { PressableScale } from './motion';
 
 interface DayNavigatorProps {
   date: CivilDate;
@@ -26,6 +27,7 @@ interface DayNavigatorProps {
  * case, plus arrows for browsing the rest of the week.
  */
 export function DayNavigator({ date, onChange, rangeDays = 14 }: DayNavigatorProps) {
+  const styles = useStyles(makeStyles);
   const today = useMemo(() => todayInKst(), []);
   const tomorrow = useMemo(() => addDays(today, 1), [today]);
   const offset = daysBetween(today, date);
@@ -55,8 +57,8 @@ export function DayNavigator({ date, onChange, rangeDays = 14 }: DayNavigatorPro
         />
 
         <View style={styles.center}>
-          <Text style={[type.heading, styles.relative]}>{relativeDayLabel(date, today)}</Text>
-          <Text style={[type.caption, styles.absolute]}>{formatKoreanDate(date)}</Text>
+          <Text style={[text.heading, styles.relative]}>{relativeDayLabel(date, today)}</Text>
+          <Text style={[text.caption, styles.absolute]}>{formatKoreanDate(date)}</Text>
         </View>
 
         <ArrowButton
@@ -86,26 +88,26 @@ function ArrowButton({
   onPress: () => void;
   accessibilityLabel: string;
 }) {
+  const t = useTheme();
+  const styles = useStyles(makeStyles);
+
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
       hitSlop={8}
-      style={({ pressed }) => [
-        styles.arrow,
-        pressed ? styles.arrowPressed : null,
-        disabled ? styles.arrowDisabled : null,
-      ]}
+      scaleTo={0.88}
+      style={[styles.arrow, disabled ? styles.arrowDisabled : null]}
     >
       <Ionicons
         name={direction === 'back' ? 'chevron-back' : 'chevron-forward'}
         size={20}
-        color={disabled ? colors.textMuted : colors.text}
+        color={disabled ? t.colors.textMuted : t.colors.text}
       />
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -118,53 +120,48 @@ function Shortcut({
   active: boolean;
   onPress: () => void;
 }) {
+  const styles = useStyles(makeStyles);
+
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.shortcut,
-        active ? styles.shortcutActive : null,
-        pressed && !active ? styles.shortcutPressed : null,
-      ]}
+      scaleTo={0.94}
+      dim
+      style={[styles.shortcut, active ? styles.shortcutActive : null]}
     >
-      <Text style={[type.label, active ? styles.shortcutLabelActive : styles.shortcutLabel]}>
+      <Text style={[text.label, active ? styles.shortcutLabelActive : styles.shortcutLabel]}>
         {label}
       </Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { gap: space(3) },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  center: { alignItems: 'center', gap: space(0.5) },
-  relative: { color: colors.text },
-  absolute: { color: colors.textSecondary },
-  arrow: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  arrowPressed: { backgroundColor: colors.surfaceMuted },
-  arrowDisabled: { opacity: 0.4 },
-  shortcuts: { flexDirection: 'row', gap: space(2), justifyContent: 'center' },
-  shortcut: {
-    paddingHorizontal: space(4),
-    paddingVertical: space(1.5),
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  shortcutActive: { backgroundColor: colors.text, borderColor: colors.text },
-  shortcutPressed: { backgroundColor: colors.surfaceMuted },
-  shortcutLabel: { color: colors.textSecondary },
-  shortcutLabelActive: { color: colors.white },
-});
+const makeStyles = (t: Theme) =>
+  StyleSheet.create({
+    container: { gap: space(3.5) },
+    row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    center: { alignItems: 'center', gap: space(0.5) },
+    relative: { color: t.colors.text },
+    absolute: { color: t.colors.textSecondary, fontVariant: ['tabular-nums'] },
+    arrow: {
+      width: 42,
+      height: 42,
+      borderRadius: radius.pill,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: t.colors.surfaceMuted,
+    },
+    arrowDisabled: { opacity: 0.35 },
+    shortcuts: { flexDirection: 'row', gap: space(2), justifyContent: 'center' },
+    shortcut: {
+      paddingHorizontal: space(5),
+      paddingVertical: space(2),
+      borderRadius: radius.pill,
+      backgroundColor: t.colors.surfaceMuted,
+    },
+    shortcutActive: { backgroundColor: t.colors.text },
+    shortcutLabel: { color: t.colors.textSecondary },
+    shortcutLabelActive: { color: t.colors.background },
+  });

@@ -1,10 +1,16 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, Platform, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import {
+  Animated,
+  Easing,
+  StyleSheet,
+  Text,
+  View,
+  type LayoutChangeEvent,
+} from 'react-native';
 
 import {
   BEST_BAND,
   LUNCH_RUSH_BANDS,
-  LUNCH_RUSH_END,
   LUNCH_RUSH_START,
   RUSH_ESTIMATE_DISCLAIMER,
   formatClock,
@@ -13,11 +19,9 @@ import {
   type RushBand,
 } from '../config/lunchRush';
 import { useNow } from '../hooks/useNow';
-import { colors, radius, shadow, space, type as text } from '../theme';
+import { radius, space, type as text, useStyles, useTheme, type Theme } from '../theme';
 import { currentMinutesInKst } from '../utils/date';
-
-/** react-native-web has no native animation module; driving there warns. */
-const USE_NATIVE_DRIVER = Platform.OS !== 'web';
+import { Pulse, USE_NATIVE_DRIVER } from './motion';
 
 interface LunchLineLiveProps {
   /** Overrides the live KST clock; used for previews and tests. */
@@ -34,6 +38,9 @@ interface LunchLineLiveProps {
  * the rush. The levels are estimates from the timetable, never a sensor.
  */
 export function LunchLineLive({ nowMinutes, compact = false, muted = false }: LunchLineLiveProps) {
+  const t = useTheme();
+  const styles = useStyles(makeStyles);
+
   // A one minute tick is what makes the indicator visibly creep along.
   const tick = useNow(60000);
 
@@ -47,10 +54,10 @@ export function LunchLineLive({ nowMinutes, compact = false, muted = false }: Lu
   const advice = useMemo(() => rushAdvice(minutes), [minutes]);
   const isLive = !muted && advice.phase === 'during';
   const current = advice.current;
+  const currentTheme = current ? t.rush[current.level] : null;
 
   const [trackWidth, setTrackWidth] = useState(0);
-  const onTrackLayout = (event: LayoutChangeEvent) =>
-    setTrackWidth(event.nativeEvent.layout.width);
+  const onTrackLayout = (event: LayoutChangeEvent) => setTrackWidth(event.nativeEvent.layout.width);
 
   // The indicator slides to its new spot rather than jumping on each tick.
   const slide = useRef(new Animated.Value(0)).current;
@@ -77,10 +84,10 @@ export function LunchLineLive({ nowMinutes, compact = false, muted = false }: Lu
     }).start();
   }, [current?.level, advice.phase, fade]);
 
-  const accent = current?.color ?? colors.textSecondary;
+  const accent = currentTheme?.color ?? t.colors.textSecondary;
 
   return (
-    <View style={[styles.card, shadow.sm, muted ? styles.muted : null]}>
+    <View style={[styles.card, t.shadow.sm, muted ? styles.muted : null]}>
       <View style={styles.header}>
         <View style={styles.titleRow}>
           <Text style={styles.titleEmoji}>🍽️</Text>
@@ -89,15 +96,30 @@ export function LunchLineLive({ nowMinutes, compact = false, muted = false }: Lu
         {isLive ? <LiveBadge /> : <EstimateChip />}
       </View>
 
-      <Animated.View style={[styles.status, { opacity: fade }]}>
+      <Animated.View
+        style={[
+          styles.status,
+          { opacity: fade, backgroundColor: currentTheme?.soft ?? t.colors.surfaceMuted },
+        ]}
+      >
         <View style={[styles.statusStripe, { backgroundColor: accent }]} />
         <View style={styles.statusText}>
           {current ? (
-            <Text style={[text.caption, styles.statusEyebrow, { color: accent }]}>
-              {current.emoji} {current.status} · {current.label}
-            </Text>
+            <View style={styles.statusEyebrowRow}>
+              <Pulse
+                active={isLive && Boolean(currentTheme?.pulse)}
+                duration={760}
+                scaleTo={1.5}
+                minOpacity={0.3}
+              >
+                <View style={[styles.statusDot, { backgroundColor: accent }]} />
+              </Pulse>
+              <Text style={[text.overline, { color: accent }]}>
+                {current.status} · {current.label}
+              </Text>
+            </View>
           ) : (
-            <Text style={[text.caption, styles.statusEyebrow]}>
+            <Text style={[text.overline, styles.statusEyebrow]}>
               {advice.phase === 'before' ? '배식 전' : '배식 종료'}
             </Text>
           )}
@@ -121,6 +143,7 @@ export function LunchLineLive({ nowMinutes, compact = false, muted = false }: Lu
           onLayout={onTrackLayout}
         >
           {LUNCH_RUSH_BANDS.map((band) => {
+            const bandTheme = t.rush[band.level];
             const active = isLive && current?.level === band.level;
             return (
               <View
@@ -129,8 +152,8 @@ export function LunchLineLive({ nowMinutes, compact = false, muted = false }: Lu
                   styles.segment,
                   {
                     flex: band.end - band.start,
-                    backgroundColor: band.color,
-                    opacity: active ? 1 : band.intensity * 0.72,
+                    backgroundColor: bandTheme.color,
+                    opacity: active ? 1 : bandTheme.intensity * 0.5,
                   },
                 ]}
               />
@@ -139,11 +162,7 @@ export function LunchLineLive({ nowMinutes, compact = false, muted = false }: Lu
 
           {isLive ? (
             <Animated.View
-              style={[
-                styles.marker,
-                { transform: [{ translateX: slide }] },
-                { pointerEvents: 'none' },
-              ]}
+              style={[styles.marker, { transform: [{ translateX: slide }] }, { pointerEvents: 'none' }]}
             >
               <View style={[styles.markerDot, { borderColor: accent }]} />
             </Animated.View>
@@ -176,11 +195,7 @@ export function LunchLineLive({ nowMinutes, compact = false, muted = false }: Lu
       {compact ? null : (
         <View style={styles.legend}>
           {LUNCH_RUSH_BANDS.map((band) => (
-            <LegendRow
-              key={band.level}
-              band={band}
-              active={isLive && current?.level === band.level}
-            />
+            <LegendRow key={band.level} band={band} active={isLive && current?.level === band.level} />
           ))}
         </View>
       )}
@@ -192,71 +207,45 @@ export function LunchLineLive({ nowMinutes, compact = false, muted = false }: Lu
 
 /** A softly pulsing dot, the usual shorthand for "this is updating". */
 function LiveBadge() {
-  const pulse = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, {
-          toValue: 1,
-          duration: 900,
-          easing: Easing.out(Easing.quad),
-          useNativeDriver: USE_NATIVE_DRIVER,
-        }),
-        Animated.timing(pulse, {
-          toValue: 0,
-          duration: 900,
-          easing: Easing.in(Easing.quad),
-          useNativeDriver: USE_NATIVE_DRIVER,
-        }),
-      ]),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [pulse]);
+  const t = useTheme();
+  const styles = useStyles(makeStyles);
 
   return (
-    <View style={[styles.liveBadge, { backgroundColor: colors.dangerSoft }]}>
-      <Animated.View
-        style={[
-          styles.liveDot,
-          {
-            backgroundColor: colors.danger,
-            opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 0.35] }),
-            transform: [
-              { scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.5] }) },
-            ],
-          },
-        ]}
-      />
-      <Text style={[text.caption, styles.liveText]}>LIVE</Text>
+    <View style={[styles.liveBadge, { backgroundColor: t.colors.dangerSoft }]}>
+      <Pulse duration={900} scaleTo={1.5} minOpacity={0.35}>
+        <View style={[styles.liveDot, { backgroundColor: t.colors.danger }]} />
+      </Pulse>
+      <Text style={[text.overline, { color: t.colors.danger }]}>LIVE</Text>
     </View>
   );
 }
 
 function EstimateChip() {
+  const styles = useStyles(makeStyles);
+
   return (
     <View style={styles.estimateChip}>
-      <Text style={[text.caption, styles.estimateText]}>예상</Text>
+      <Text style={[text.overline, styles.estimateText]}>예상</Text>
     </View>
   );
 }
 
 function LegendRow({ band, active }: { band: RushBand; active: boolean }) {
+  const t = useTheme();
+  const styles = useStyles(makeStyles);
+  const bandTheme = t.rush[band.level];
   const isBest = band.level === BEST_BAND.level;
 
   return (
-    <View style={[styles.legendRow, active ? { backgroundColor: band.soft } : null]}>
-      <View style={[styles.legendDot, { backgroundColor: band.color }]} />
+    <View style={[styles.legendRow, active ? { backgroundColor: bandTheme.soft } : null]}>
+      <View style={[styles.legendDot, { backgroundColor: bandTheme.color }]} />
 
       <View style={styles.legendBody}>
         <View style={styles.legendTop}>
           <Text style={[text.bodyStrong, styles.legendTime]}>
             {formatClock(band.start)} – {formatClock(band.end)}
           </Text>
-          <Text style={[text.caption, styles.legendStatus, { color: band.color }]}>
-            {band.status}
-          </Text>
+          <Text style={[text.overline, { color: bandTheme.color }]}>{band.status}</Text>
           {isBest ? (
             <View style={styles.bestChip}>
               <Text style={[text.caption, styles.bestChipText]}>Best time to go</Text>
@@ -269,107 +258,116 @@ function LegendRow({ band, active }: { band: RushBand; active: boolean }) {
   );
 }
 
-const BAR_HEIGHT = 16;
+const BAR_HEIGHT = 14;
 const TICK_WIDTH = 44;
-const MARKER = 16;
+const MARKER = 18;
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: space(4),
-    gap: space(3),
-  },
-  muted: { opacity: 0.7 },
+const makeStyles = (t: Theme) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: t.colors.surface,
+      borderRadius: radius.xl,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: t.colors.border,
+      padding: space(4.5),
+      gap: space(3.5),
+    },
+    muted: { opacity: 0.6 },
 
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space(2) },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: space(2) },
-  titleEmoji: { fontSize: 16 },
-  title: { color: colors.text, letterSpacing: -0.2 },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: space(2),
+    },
+    titleRow: { flexDirection: 'row', alignItems: 'center', gap: space(2) },
+    titleEmoji: { fontSize: 16 },
+    title: { color: t.colors.text },
 
-  liveBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space(1.5),
-    paddingHorizontal: space(2.5),
-    paddingVertical: space(1),
-    borderRadius: radius.pill,
-  },
-  liveDot: { width: 7, height: 7, borderRadius: 4 },
-  liveText: { color: colors.danger, fontWeight: '800', letterSpacing: 0.8 },
+    liveBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: space(1.5),
+      paddingHorizontal: space(2.5),
+      paddingVertical: space(1.5),
+      borderRadius: radius.pill,
+    },
+    liveDot: { width: 7, height: 7, borderRadius: 4 },
 
-  estimateChip: {
-    paddingHorizontal: space(2.5),
-    paddingVertical: space(1),
-    borderRadius: radius.pill,
-    backgroundColor: colors.surfaceMuted,
-  },
-  estimateText: { color: colors.textSecondary, fontWeight: '700', letterSpacing: 0.4 },
+    estimateChip: {
+      paddingHorizontal: space(2.5),
+      paddingVertical: space(1.5),
+      borderRadius: radius.pill,
+      backgroundColor: t.colors.surfaceMuted,
+    },
+    estimateText: { color: t.colors.textSecondary },
 
-  status: { flexDirection: 'row', gap: space(3), alignItems: 'stretch' },
-  statusStripe: { width: 4, borderRadius: radius.pill },
-  statusText: { flex: 1, gap: space(0.5) },
-  statusEyebrow: { color: colors.textSecondary, fontWeight: '800', letterSpacing: 0.4 },
-  headline: { color: colors.text },
-  hint: { color: colors.textSecondary },
-  clock: { color: colors.textMuted, marginTop: space(0.5) },
+    status: {
+      flexDirection: 'row',
+      gap: space(3),
+      alignItems: 'stretch',
+      borderRadius: radius.md,
+      padding: space(3.5),
+    },
+    statusStripe: { width: 4, borderRadius: radius.pill },
+    statusText: { flex: 1, gap: space(1) },
+    statusEyebrowRow: { flexDirection: 'row', alignItems: 'center', gap: space(1.5) },
+    statusDot: { width: 8, height: 8, borderRadius: 4 },
+    statusEyebrow: { color: t.colors.textSecondary },
+    headline: { color: t.colors.text },
+    hint: { color: t.colors.textSecondary },
+    clock: { color: t.colors.textMuted, fontVariant: ['tabular-nums'] },
 
-  bar: {
-    flexDirection: 'row',
-    height: BAR_HEIGHT,
-    borderRadius: radius.pill,
-    overflow: 'visible',
-    gap: 2,
-  },
-  segment: { height: '100%', borderRadius: 3 },
-  marker: {
-    position: 'absolute',
-    top: (BAR_HEIGHT - MARKER) / 2,
-    left: -MARKER / 2,
-  },
-  markerDot: {
-    width: MARKER,
-    height: MARKER,
-    borderRadius: MARKER / 2,
-    backgroundColor: colors.white,
-    borderWidth: 4,
-  },
+    bar: {
+      flexDirection: 'row',
+      height: BAR_HEIGHT,
+      borderRadius: radius.pill,
+      overflow: 'visible',
+      gap: 3,
+    },
+    segment: { height: '100%', borderRadius: 4 },
+    marker: { position: 'absolute', top: (BAR_HEIGHT - MARKER) / 2, left: -MARKER / 2 },
+    markerDot: {
+      width: MARKER,
+      height: MARKER,
+      borderRadius: MARKER / 2,
+      backgroundColor: t.colors.surface,
+      borderWidth: 4,
+    },
 
-  ticks: { height: 16, marginTop: space(1.5) },
-  tick: {
-    position: 'absolute',
-    color: colors.textMuted,
-    width: TICK_WIDTH,
-    marginLeft: -TICK_WIDTH / 2,
-    textAlign: 'center',
-  },
-  tickFirst: { left: 0, marginLeft: 0, textAlign: 'left' },
-  tickLast: { right: 0, marginLeft: 0, textAlign: 'right' },
+    ticks: { height: 16, marginTop: space(2) },
+    tick: {
+      position: 'absolute',
+      color: t.colors.textMuted,
+      width: TICK_WIDTH,
+      marginLeft: -TICK_WIDTH / 2,
+      textAlign: 'center',
+      fontVariant: ['tabular-nums'],
+    },
+    tickFirst: { left: 0, marginLeft: 0, textAlign: 'left' },
+    tickLast: { right: 0, marginLeft: 0, textAlign: 'right' },
 
-  legend: { gap: space(1) },
-  legendRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: space(2.5),
-    paddingVertical: space(2),
-    paddingHorizontal: space(2),
-    borderRadius: radius.md,
-  },
-  legendDot: { width: 10, height: 10, borderRadius: 5, marginTop: 6 },
-  legendBody: { flex: 1, gap: space(0.5) },
-  legendTop: { flexDirection: 'row', alignItems: 'center', gap: space(2), flexWrap: 'wrap' },
-  legendTime: { color: colors.text },
-  legendStatus: { fontWeight: '800', letterSpacing: 0.4 },
-  legendDetail: { color: colors.textSecondary },
-  bestChip: {
-    backgroundColor: colors.accentSoft,
-    paddingHorizontal: space(2),
-    paddingVertical: space(0.5),
-    borderRadius: radius.pill,
-  },
-  bestChipText: { color: colors.accent, fontWeight: '700' },
+    legend: { gap: space(1) },
+    legendRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: space(2.5),
+      paddingVertical: space(2.5),
+      paddingHorizontal: space(2.5),
+      borderRadius: radius.md,
+    },
+    legendDot: { width: 10, height: 10, borderRadius: 5, marginTop: 6 },
+    legendBody: { flex: 1, gap: space(0.5) },
+    legendTop: { flexDirection: 'row', alignItems: 'center', gap: space(2), flexWrap: 'wrap' },
+    legendTime: { color: t.colors.text, fontVariant: ['tabular-nums'] },
+    legendDetail: { color: t.colors.textSecondary },
+    bestChip: {
+      backgroundColor: t.colors.accentSoft,
+      paddingHorizontal: space(2),
+      paddingVertical: space(0.5),
+      borderRadius: radius.pill,
+    },
+    bestChipText: { color: t.colors.accent, fontWeight: '700' },
 
-  disclaimer: { color: colors.textMuted },
-});
+    disclaimer: { color: t.colors.textMuted },
+  });

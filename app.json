@@ -1,18 +1,18 @@
 {
   "expo": {
-    "name": "오늘 뭐 먹지",
+    "name": "VIS 급식",
     "slug": "school-meal-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.schoolmeal.app"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#F6F5F3",
+        "backgroundColor": "#F4F4F7",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -28,7 +28,7 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#F6F5F3"
+      "backgroundColor": "#F4F4F7"
     },
     "extra": {
       "firebaseApiKey": "",
@@ -36,8 +36,7 @@
       "firebaseProjectId": "",
       "firebaseStorageBucket": "",
       "firebaseMessagingSenderId": "",
-      "firebaseAppId": "",
-      "neisApiKey": ""
+      "firebaseAppId": ""
     }
   }
 }

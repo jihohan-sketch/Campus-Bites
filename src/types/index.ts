@@ -111,22 +111,6 @@ export interface CrowdSummary {
   trend: 'rising' | 'falling' | 'steady' | 'unknown';
 }
 
-/** Where a friend currently is relative to lunch. */
-export type RadarStatus = 'idle' | 'heading' | 'seated' | 'done';
-
-/** The live document at `presence/{uid}` powering Friend Radar. */
-export interface Presence {
-  uid: string;
-  displayName: string;
-  emoji: string;
-  schoolKey: string;
-  status: RadarStatus;
-  /** Free text such as "3층 창가". */
-  spot: string;
-  mealType: MealType;
-  updatedAt: number;
-}
-
 /** A confirmed friend, mirrored under `users/{uid}/friends/{friendUid}`. */
 export interface Friend {
   uid: string;

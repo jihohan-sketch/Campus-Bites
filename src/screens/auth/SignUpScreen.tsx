@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
 import {
@@ -14,26 +15,34 @@ import { Button } from '../../components/Button';
 import { Screen } from '../../components/Screen';
 import { TextField } from '../../components/TextField';
 import { describeAuthError } from '../../config/firebase';
+import { APP_SCHOOL_EMAIL_DOMAIN, isSchoolEmail } from '../../config/school';
 import { useAuth } from '../../context/AuthContext';
 import type { RootStackParamList } from '../../navigation/types';
-import { colors, space, type } from '../../theme';
+import { radius, space, type as text, useStyles, useTheme, type Theme } from '../../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SignUp'>;
 
 export function SignUpScreen({ navigation }: Props) {
-  const { signUp } = useAuth();
+  const t = useTheme();
+  const styles = useStyles(makeStyles);
+  const { signUp, signInWithGoogle, googleAvailable } = useAuth();
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
 
+  const busy = submitting || googleBusy;
   const passwordTooShort = password.length > 0 && password.length < 6;
+  // Flag the wrong domain while they type rather than after they hit 가입하기.
+  const wrongDomain = email.trim().length > 0 && !isSchoolEmail(email);
   const canSubmit =
     displayName.trim().length > 0 &&
     email.trim().length > 0 &&
+    !wrongDomain &&
     password.length >= 6 &&
-    !submitting;
+    !busy;
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
@@ -44,6 +53,18 @@ export function SignUpScreen({ navigation }: Props) {
     } catch (signUpError) {
       setError(describeAuthError(signUpError));
       setSubmitting(false);
+    }
+  };
+
+  const handleGoogle = async () => {
+    if (busy) return;
+    setGoogleBusy(true);
+    setError(null);
+    try {
+      await signInWithGoogle();
+    } catch (googleError) {
+      setError(describeAuthError(googleError));
+      setGoogleBusy(false);
     }
   };
 
@@ -58,13 +79,33 @@ export function SignUpScreen({ navigation }: Props) {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.hero}>
-            <Text style={[type.display, styles.title]}>가입하기</Text>
-            <Text style={[type.body, styles.subtitle]}>
-              친구들이 알아볼 이름과 학교 이메일이면 충분해요.
+            <Text style={[text.display, styles.title]}>가입하기</Text>
+            <Text style={[text.body, styles.subtitle]}>
+              {`친구들이 알아볼 이름과 학교 이메일(@${APP_SCHOOL_EMAIL_DOMAIN})이면 충분해요.`}
             </Text>
           </View>
 
           <View style={styles.form}>
+            {googleAvailable ? (
+              <>
+                <Button
+                  label="학교 구글 계정으로 가입하기"
+                  variant="secondary"
+                  onPress={handleGoogle}
+                  loading={googleBusy}
+                  disabled={busy}
+                  size="lg"
+                  fullWidth
+                  leading={<Ionicons name="logo-google" size={18} color={t.colors.text} />}
+                />
+                <View style={styles.divider}>
+                  <View style={styles.dividerLine} />
+                  <Text style={[text.caption, styles.dividerText]}>또는 이메일로</Text>
+                  <View style={styles.dividerLine} />
+                </View>
+              </>
+            ) : null}
+
             <TextField
               label="이름"
               value={displayName}
@@ -78,12 +119,14 @@ export function SignUpScreen({ navigation }: Props) {
               label="이메일"
               value={email}
               onChangeText={setEmail}
-              placeholder="student@school.kr"
+              placeholder={`student@${APP_SCHOOL_EMAIL_DOMAIN}`}
               autoCapitalize="none"
               autoComplete="email"
               keyboardType="email-address"
               textContentType="emailAddress"
               returnKeyType="next"
+              hint={`학교 계정(@${APP_SCHOOL_EMAIL_DOMAIN})만 가입할 수 있어요`}
+              error={wrongDomain ? `@${APP_SCHOOL_EMAIL_DOMAIN} 주소를 입력해 주세요.` : null}
             />
             <TextField
               label="비밀번호"
@@ -115,8 +158,8 @@ export function SignUpScreen({ navigation }: Props) {
               onPress={() => navigation.goBack()}
               style={styles.switchRow}
             >
-              <Text style={[type.body, styles.switchText]}>이미 계정이 있나요? </Text>
-              <Text style={[type.bodyStrong, styles.switchLink]}>로그인</Text>
+              <Text style={[text.body, styles.switchText]}>이미 계정이 있나요? </Text>
+              <Text style={[text.bodyStrong, styles.switchLink]}>로그인</Text>
             </Pressable>
           </View>
         </ScrollView>
@@ -125,15 +168,19 @@ export function SignUpScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  content: { flexGrow: 1, padding: space(6), justifyContent: 'center', gap: space(7) },
-  hero: { gap: space(2) },
-  title: { color: colors.text },
-  subtitle: { color: colors.textSecondary },
-  form: { gap: space(4) },
-  submit: { marginTop: space(2) },
-  switchRow: { flexDirection: 'row', justifyContent: 'center', marginTop: space(2) },
-  switchText: { color: colors.textSecondary },
-  switchLink: { color: colors.brand },
-});
+const makeStyles = (t: Theme) =>
+  StyleSheet.create({
+    flex: { flex: 1 },
+    content: { flexGrow: 1, padding: space(6), justifyContent: 'center', gap: space(7) },
+    hero: { gap: space(2) },
+    title: { color: t.colors.text },
+    subtitle: { color: t.colors.textSecondary },
+    form: { gap: space(4) },
+    submit: { marginTop: space(2) },
+    switchRow: { flexDirection: 'row', justifyContent: 'center', marginTop: space(2) },
+    switchText: { color: t.colors.textSecondary },
+    switchLink: { color: t.colors.brand },
+    divider: { flexDirection: 'row', alignItems: 'center', gap: space(3) },
+    dividerLine: { flex: 1, height: 1, backgroundColor: t.colors.border },
+    dividerText: { color: t.colors.textMuted },
+  });

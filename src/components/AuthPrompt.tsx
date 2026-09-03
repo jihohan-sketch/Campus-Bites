@@ -14,7 +14,7 @@ interface AuthPromptProps {
 /** Shown on screens that need a signed-in account. */
 export function AuthPrompt({
   title = '로그인이 필요해요',
-  description = '로그인하면 혼잡도 제보, 친구 추가, 레이더를 쓸 수 있어요. 급식표는 로그인 없이도 볼 수 있어요.',
+  description = '로그인하면 혼잡도 제보와 친구 추가를 쓸 수 있어요. 급식표는 로그인 없이도 볼 수 있어요.',
 }: AuthPromptProps) {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 

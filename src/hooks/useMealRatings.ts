@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { describeAuthError } from '../config/firebase';
 import {
   EMPTY_RATING_SUMMARY,
+  canRate,
   getRaterId,
   isLocalOnly,
   serviceKeyOf,
@@ -23,6 +24,8 @@ export interface UseMealRatingsResult {
   error: string | null;
   /** True while ratings are device-local because no backend is configured. */
   localOnly: boolean;
+  /** False for a signed-out student on a configured install: they read only. */
+  canRate: boolean;
   submit: (input: Omit<MealRatingInput, 'schoolKey' | 'date' | 'mealType'>) => Promise<boolean>;
 }
 
@@ -106,6 +109,7 @@ export function useMealRatings(
     submitting,
     error,
     localOnly: isLocalOnly(),
+    canRate: canRate(uid),
     submit,
   };
 }

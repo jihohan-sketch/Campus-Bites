@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { fetchMealsInRange, schoolKeyOf } from '../config/school';
+import { fetchRemoteMenus } from './menus';
 import type { Meal, MealsByType } from '../types';
 
 /**
@@ -75,8 +76,11 @@ async function writeDay(ymd: string, meals: Meal[]): Promise<void> {
 }
 
 /**
- * Loads a date range from the local VIS menu and caches each day, including
- * days with no meals so "급식 없음" is answered instantly next time.
+ * Loads a date range and caches each day, including days with no meals so
+ * "급식 없음" is answered instantly next time.
+ *
+ * The bundled 식단표 is the baseline; any day the school has published to
+ * Firestore replaces it, which is what lets a new month go up without a build.
  */
 export async function fetchAndCacheRange(
   ymds: string[],
@@ -94,6 +98,9 @@ export async function fetchAndCacheRange(
     if (bucket) bucket.push(meal);
     else byDay.set(meal.date, [meal]);
   });
+
+  const remote = await fetchRemoteMenus(sorted);
+  remote.forEach((dayMeals, ymd) => byDay.set(ymd, dayMeals));
 
   await Promise.all(
     Array.from(byDay.entries()).map(([ymd, dayMeals]) => writeDay(ymd, dayMeals)),

@@ -1,4 +1,4 @@
-import type { Dish, InfoPair } from '../types';
+import type { Dish } from '../types';
 
 /**
  * NEIS's official allergen numbering, used to expand the `(1.2.5)` suffixes
@@ -30,68 +30,35 @@ export function allergenLabel(code: number): string {
   return ALLERGEN_LABELS[code] ?? `기타(${code})`;
 }
 
-/** Splits a NEIS `<br/>` delimited blob into trimmed, non-empty lines. */
-function splitLines(raw: string | null | undefined): string[] {
-  if (!raw) return [];
-  return raw
-    .split(/<br\s*\/?>/i)
-    .map((line) => line.replace(/\s+/g, ' ').trim())
-    .filter((line) => line.length > 0);
-}
-
 const ALLERGEN_SUFFIX = /\(([\d.\s,]+)\)\s*$/;
 
 /**
- * Turns `DDISH_NM` into structured dishes.
+ * Turns one menu line into a structured dish.
  *
  * A raw line looks like `*양상추샐러드&사과D(과) (1.2.5.6.12)`: a leading `*`
  * marks a recurring item, a trailing parenthesised list holds allergen codes,
  * and other parentheses are part of the dish name.
  */
-export function parseDishes(raw: string | null | undefined): Dish[] {
-  return splitLines(raw).map((line) => {
-    const match = line.match(ALLERGEN_SUFFIX);
-    let name = line;
-    let allergens: number[] = [];
+export function parseDishLine(line: string): Dish {
+  const trimmed = line.replace(/\s+/g, ' ').trim();
+  const match = trimmed.match(ALLERGEN_SUFFIX);
+  let name = trimmed;
+  let allergens: number[] = [];
 
-    if (match) {
-      const codes = match[1]
-        .split(/[.,\s]+/)
-        .map((token) => Number(token))
-        .filter((value) => Number.isInteger(value) && value > 0);
-      // Only strip the suffix when it really was a list of allergen codes.
-      if (codes.length > 0) {
-        allergens = Array.from(new Set(codes)).sort((a, b) => a - b);
-        name = line.slice(0, match.index ?? line.length).trim();
-      }
+  if (match) {
+    const codes = match[1]
+      .split(/[.,\s]+/)
+      .map((token) => Number(token))
+      .filter((value) => Number.isInteger(value) && value > 0);
+    // Only strip the suffix when it really was a list of allergen codes.
+    if (codes.length > 0) {
+      allergens = Array.from(new Set(codes)).sort((a, b) => a - b);
+      name = trimmed.slice(0, match.index ?? trimmed.length).trim();
     }
+  }
 
-    name = name.replace(/^[*\s]+/, '').trim();
-    return { name, allergens };
-  });
-}
-
-/** Parses `탄수화물(g) : 68.5<br/>단백질(g) : 16.9` style blobs. */
-export function parseInfoPairs(raw: string | null | undefined): InfoPair[] {
-  return splitLines(raw)
-    .map((line) => {
-      const separator = line.indexOf(':');
-      if (separator === -1) return { label: line, value: '' };
-      return {
-        label: line.slice(0, separator).trim(),
-        value: line.slice(separator + 1).trim(),
-      };
-    })
-    .filter((pair) => pair.label.length > 0 && pair.value.length > 0);
-}
-
-/** Pulls the number out of `595.7 Kcal`. */
-export function parseCalories(raw: string | null | undefined): number | null {
-  if (!raw) return null;
-  const match = raw.match(/[\d.]+/);
-  if (!match) return null;
-  const value = Number(match[0]);
-  return Number.isFinite(value) ? value : null;
+  name = name.replace(/^[*\s]+/, '').trim();
+  return { name, allergens };
 }
 
 /** Every distinct allergen present across a set of dishes. */

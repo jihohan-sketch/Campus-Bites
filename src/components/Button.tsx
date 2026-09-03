@@ -1,17 +1,19 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   StyleSheet,
   Text,
   View,
   type StyleProp,
+  type TextStyle,
   type ViewStyle,
 } from 'react-native';
 
-import { colors, radius, shadow, space, type } from '../theme';
+import { radius, space, type as text, useStyles, useTheme, type Theme } from '../theme';
+import { PressableScale } from './motion';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'tonal';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps {
@@ -24,10 +26,17 @@ interface ButtonProps {
   /** Rendered to the left of the label — usually an icon. */
   leading?: React.ReactNode;
   fullWidth?: boolean;
+  /** Overrides the accent for `primary` / `tonal` — e.g. the meal's tint. */
+  tint?: string;
   style?: StyleProp<ViewStyle>;
 }
 
-const HEIGHTS: Record<ButtonSize, number> = { sm: 36, md: 46, lg: 54 };
+const HEIGHTS: Record<ButtonSize, number> = { sm: 38, md: 48, lg: 56 };
+const LABEL: Record<ButtonSize, TextStyle> = {
+  sm: { fontSize: 13 },
+  md: { fontSize: 15 },
+  lg: { fontSize: 16 },
+};
 
 export function Button({
   label,
@@ -38,67 +47,84 @@ export function Button({
   disabled = false,
   leading,
   fullWidth = false,
+  tint,
   style,
 }: ButtonProps) {
+  const theme = useTheme();
+  const styles = useStyles(makeStyles);
   const isDisabled = disabled || loading;
-  const palette = VARIANTS[variant];
+  const accent = tint ?? theme.colors.brand;
+
+  const palette: Record<ButtonVariant, { background: string; text: string; border?: string }> = {
+    primary: { background: accent, text: theme.colors.onAccent },
+    tonal: { background: theme.colors.brandSoft, text: accent },
+    secondary: {
+      background: theme.colors.surface,
+      text: theme.colors.text,
+      border: theme.colors.borderStrong,
+    },
+    ghost: { background: 'transparent', text: accent },
+    danger: { background: theme.colors.dangerSoft, text: theme.colors.danger },
+  };
+
+  const look = palette[variant];
+  const isFilled = variant === 'primary';
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       onPress={onPress}
       disabled={isDisabled}
-      style={({ pressed }) => [
+      scaleTo={size === 'lg' ? 0.975 : 0.95}
+      dim={!isFilled}
+      style={[
         styles.base,
-        { height: HEIGHTS[size], backgroundColor: palette.background },
-        palette.border ? { borderWidth: 1, borderColor: palette.border } : null,
-        variant === 'primary' && !isDisabled ? shadow.sm : null,
+        { height: HEIGHTS[size], backgroundColor: look.background },
+        look.border ? { borderWidth: StyleSheet.hairlineWidth, borderColor: look.border } : null,
+        isFilled && !isDisabled ? theme.shadow.sm : null,
         fullWidth ? styles.fullWidth : null,
-        pressed && !isDisabled ? styles.pressed : null,
         isDisabled ? styles.disabled : null,
         style,
       ]}
     >
+      {/* A single soft highlight along the top edge — enough to give a filled
+          button a lit surface without turning it into a gradient blob. */}
+      {isFilled ? (
+        <LinearGradient
+          colors={['rgba(255,255,255,0.22)', 'rgba(255,255,255,0)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+      ) : null}
+
       {loading ? (
-        <ActivityIndicator color={palette.text} size="small" />
+        <ActivityIndicator color={look.text} size="small" style={styles.above} />
       ) : (
         <View style={styles.content}>
-          {leading ? <View style={styles.leading}>{leading}</View> : null}
-          <Text
-            numberOfLines={1}
-            style={[
-              type.bodyStrong,
-              { color: palette.text },
-              size === 'sm' ? styles.smallLabel : null,
-            ]}
-          >
+          {leading}
+          <Text numberOfLines={1} style={[text.bodyStrong, LABEL[size], { color: look.text }]}>
             {label}
           </Text>
         </View>
       )}
-    </Pressable>
+    </PressableScale>
   );
 }
 
-const VARIANTS: Record<ButtonVariant, { background: string; text: string; border?: string }> = {
-  primary: { background: colors.brand, text: colors.white },
-  secondary: { background: colors.surface, text: colors.text, border: colors.borderStrong },
-  ghost: { background: 'transparent', text: colors.brand },
-  danger: { background: colors.dangerSoft, text: colors.danger },
-};
-
-const styles = StyleSheet.create({
-  base: {
-    borderRadius: radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: space(5),
-  },
-  fullWidth: { alignSelf: 'stretch' },
-  content: { flexDirection: 'row', alignItems: 'center', gap: space(2) },
-  leading: { marginRight: 0 },
-  smallLabel: { fontSize: 13 },
-  pressed: { opacity: 0.82, transform: [{ scale: 0.985 }] },
-  disabled: { opacity: 0.45 },
-});
+const makeStyles = (_t: Theme) =>
+  StyleSheet.create({
+    base: {
+      borderRadius: radius.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: space(5),
+      overflow: 'hidden',
+    },
+    fullWidth: { alignSelf: 'stretch' },
+    content: { flexDirection: 'row', alignItems: 'center', gap: space(2), zIndex: 1 },
+    above: { zIndex: 1 },
+    disabled: { opacity: 0.4 },
+  });

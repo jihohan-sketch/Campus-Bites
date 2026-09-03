@@ -5,7 +5,6 @@ import type { Meal } from '../types';
 export type MainTabParamList = {
   Meals: undefined;
   Cafeteria: undefined;
-  Radar: undefined;
   Profile: undefined;
 };
 

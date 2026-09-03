@@ -33,13 +33,15 @@ import {
   sendFriendRequest,
 } from '../../services/friends';
 import { findProfileByFriendCode } from '../../services/profile';
-import { colors, radius, space, type } from '../../theme';
+import { radius, space, type as text, useStyles, useTheme, type Theme } from '../../theme';
 import type { Friend, FriendRequest } from '../../types';
 import { formatRelativeTime } from '../../utils/date';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AddFriend'>;
 
 export function AddFriendScreen({ navigation }: Props) {
+  const t = useTheme();
+  const styles = useStyles(makeStyles);
   const { profile, user } = useAuth();
   const { friends, incoming, outgoing } = useFriends(profile?.uid ?? null);
 
@@ -152,17 +154,17 @@ export function AddFriendScreen({ navigation }: Props) {
       >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <Card style={styles.myCodeCard}>
-            <Text style={[type.label, styles.myCodeLabel]}>내 친구 코드</Text>
-            <Text style={[type.mono, styles.myCode]} selectable>
+            <Text style={[text.label, styles.myCodeLabel]}>내 친구 코드</Text>
+            <Text style={[text.mono, styles.myCode]} selectable>
               {profile?.friendCode ?? '------'}
             </Text>
-            <Text style={[type.caption, styles.myCodeHint]}>
-              이 코드를 친구에게 알려 주면 서로 레이더에 나타나요.
+            <Text style={[text.caption, styles.myCodeHint]}>
+              이 코드를 친구에게 알려 주면 서로 친구 목록에 추가돼요.
             </Text>
           </Card>
 
           <View style={styles.section}>
-            <Text style={[type.label, styles.sectionTitle]}>친구 코드로 추가</Text>
+            <Text style={[text.label, styles.sectionTitle]}>친구 코드로 추가</Text>
             <TextField
               label="친구 코드"
               value={code}
@@ -187,15 +189,15 @@ export function AddFriendScreen({ navigation }: Props) {
 
           {incoming.length > 0 ? (
             <View style={styles.section}>
-              <Text style={[type.label, styles.sectionTitle]}>받은 요청</Text>
+              <Text style={[text.label, styles.sectionTitle]}>받은 요청</Text>
               {incoming.map((request) => (
                 <Card key={request.id} style={styles.requestCard}>
                   <Avatar emoji={request.fromEmoji} size={44} />
                   <View style={styles.requestBody}>
-                    <Text style={[type.bodyStrong, styles.requestName]} numberOfLines={1}>
+                    <Text style={[text.bodyStrong, styles.requestName]} numberOfLines={1}>
                       {request.fromName}
                     </Text>
-                    <Text style={[type.caption, styles.requestMeta]} numberOfLines={1}>
+                    <Text style={[text.caption, styles.requestMeta]} numberOfLines={1}>
                       {[request.fromSchoolName, formatRelativeTime(request.createdAt)]
                         .filter(Boolean)
                         .join(' · ')}
@@ -223,13 +225,13 @@ export function AddFriendScreen({ navigation }: Props) {
 
           {outgoing.length > 0 ? (
             <View style={styles.section}>
-              <Text style={[type.label, styles.sectionTitle]}>보낸 요청</Text>
+              <Text style={[text.label, styles.sectionTitle]}>보낸 요청</Text>
               {outgoing.map((request) => (
                 <Card key={request.id} style={styles.requestCard} variant="flat">
-                  <Ionicons name="paper-plane-outline" size={20} color={colors.textSecondary} />
+                  <Ionicons name="paper-plane-outline" size={20} color={t.colors.textSecondary} />
                   <View style={styles.requestBody}>
-                    <Text style={[type.body, styles.requestName]}>수락을 기다리는 중</Text>
-                    <Text style={[type.caption, styles.requestMeta]}>
+                    <Text style={[text.body, styles.requestName]}>수락을 기다리는 중</Text>
+                    <Text style={[text.caption, styles.requestMeta]}>
                       {formatRelativeTime(request.createdAt)}
                     </Text>
                   </View>
@@ -246,7 +248,7 @@ export function AddFriendScreen({ navigation }: Props) {
           ) : null}
 
           <View style={styles.section}>
-            <Text style={[type.label, styles.sectionTitle]}>내 친구 {friends.length}명</Text>
+            <Text style={[text.label, styles.sectionTitle]}>내 친구 {friends.length}명</Text>
             {friends.length === 0 ? (
               <EmptyState
                 emoji="🧑‍🤝‍🧑"
@@ -264,10 +266,10 @@ export function AddFriendScreen({ navigation }: Props) {
                 >
                   <Avatar emoji={friend.emoji} size={40} />
                   <View style={styles.requestBody}>
-                    <Text style={[type.bodyStrong, styles.requestName]} numberOfLines={1}>
+                    <Text style={[text.bodyStrong, styles.requestName]} numberOfLines={1}>
                       {friend.displayName}
                     </Text>
-                    <Text style={[type.caption, styles.requestMeta]} numberOfLines={1}>
+                    <Text style={[text.caption, styles.requestMeta]} numberOfLines={1}>
                       {friend.schoolName || '학교 미설정'}
                     </Text>
                   </View>
@@ -277,7 +279,7 @@ export function AddFriendScreen({ navigation }: Props) {
                     hitSlop={10}
                     onPress={() => confirmRemove(friend)}
                   >
-                    <Ionicons name="close" size={18} color={colors.textMuted} />
+                    <Ionicons name="close" size={18} color={t.colors.textMuted} />
                   </Pressable>
                 </Pressable>
               ))
@@ -296,29 +298,30 @@ export function AddFriendScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  content: { padding: space(5), paddingBottom: space(10), gap: space(5) },
-  myCodeCard: { alignItems: 'center', gap: space(1.5), paddingVertical: space(6) },
-  myCodeLabel: { color: colors.textSecondary },
-  myCode: { color: colors.brand, fontSize: 30, lineHeight: 36 },
-  myCodeHint: { color: colors.textMuted, textAlign: 'center' },
-  section: { gap: space(3) },
-  sectionTitle: { color: colors.textSecondary },
-  requestCard: { flexDirection: 'row', alignItems: 'center', gap: space(3) },
-  requestBody: { flex: 1, gap: space(0.5) },
-  requestName: { color: colors.text },
-  requestMeta: { color: colors.textMuted },
-  requestActions: { gap: space(1.5) },
-  friendRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space(3),
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: space(3.5),
-  },
-  pressed: { opacity: 0.85 },
-});
+const makeStyles = (t: Theme) =>
+  StyleSheet.create({
+    flex: { flex: 1 },
+    content: { padding: space(5), paddingBottom: space(10), gap: space(5) },
+    myCodeCard: { alignItems: 'center', gap: space(1.5), paddingVertical: space(6) },
+    myCodeLabel: { color: t.colors.textSecondary },
+    myCode: { color: t.colors.brand, fontSize: 30, lineHeight: 36 },
+    myCodeHint: { color: t.colors.textMuted, textAlign: 'center' },
+    section: { gap: space(3) },
+    sectionTitle: { color: t.colors.textSecondary },
+    requestCard: { flexDirection: 'row', alignItems: 'center', gap: space(3) },
+    requestBody: { flex: 1, gap: space(0.5) },
+    requestName: { color: t.colors.text },
+    requestMeta: { color: t.colors.textMuted },
+    requestActions: { gap: space(1.5) },
+    friendRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: space(3),
+      backgroundColor: t.colors.surface,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: t.colors.border,
+      padding: space(3.5),
+    },
+    pressed: { opacity: 0.85 },
+  });

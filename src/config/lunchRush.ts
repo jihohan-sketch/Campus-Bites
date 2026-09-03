@@ -20,11 +20,12 @@ export interface RushBand {
   label: string;
   /** One line a student can act on. */
   detail: string;
-  color: string;
-  soft: string;
-  /** Bar fill opacity — heavier traffic reads as a denser block. */
-  intensity: number;
 }
+
+/**
+ * Colours live in the theme (`theme.rush[level]`), not here — a band is a fact
+ * about the timetable, and the same fact has to render in light and dark.
+ */
 
 const H = (hour: number, minute: number): Minutes => hour * 60 + minute;
 
@@ -38,9 +39,6 @@ export const LUNCH_RUSH_BANDS: RushBand[] = [
     status: 'VERY BUSY',
     label: '가장 혼잡',
     detail: '배식 시작 직후라 한 번에 몰려요',
-    color: '#B91C1C',
-    soft: '#FCE9E9',
-    intensity: 1,
   },
   {
     level: 'busy',
@@ -50,9 +48,6 @@ export const LUNCH_RUSH_BANDS: RushBand[] = [
     status: 'MODERATE',
     label: '조금 혼잡',
     detail: '줄은 있지만 금방 줄어들어요',
-    color: '#B45309',
-    soft: '#FDF1DF',
-    intensity: 0.78,
   },
   {
     level: 'calm',
@@ -62,9 +57,6 @@ export const LUNCH_RUSH_BANDS: RushBand[] = [
     status: 'ALMOST EMPTY',
     label: '거의 한산',
     detail: '기다리지 않고 바로 받을 수 있어요',
-    color: '#15803D',
-    soft: '#E4F5E9',
-    intensity: 0.56,
   },
 ];
 

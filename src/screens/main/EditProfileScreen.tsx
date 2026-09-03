@@ -20,11 +20,13 @@ import { useAuth } from '../../context/AuthContext';
 import type { RootStackParamList } from '../../navigation/types';
 import { syncFriendMirrors } from '../../services/friends';
 import { AVATAR_EMOJIS, updateProfile } from '../../services/profile';
-import { colors, radius, space, type } from '../../theme';
+import { radius, space, type as text, useStyles, useTheme, type Theme } from '../../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EditProfile'>;
 
 export function EditProfileScreen({ navigation }: Props) {
+  const t = useTheme();
+  const styles = useStyles(makeStyles);
   const { profile, user } = useAuth();
 
   const [displayName, setDisplayName] = useState(profile?.displayName ?? '');
@@ -71,7 +73,7 @@ export function EditProfileScreen({ navigation }: Props) {
       >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.field}>
-            <Text style={[type.label, styles.fieldLabel]}>아바타</Text>
+            <Text style={[text.label, styles.fieldLabel]}>아바타</Text>
             <View style={styles.emojiGrid}>
               {AVATAR_EMOJIS.map((option) => {
                 const selected = option === emoji;
@@ -147,25 +149,26 @@ function parseOptionalInt(value: string): number | null {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  content: { padding: space(5), paddingBottom: space(10), gap: space(5) },
-  field: { gap: space(2.5) },
-  fieldLabel: { color: colors.textSecondary },
-  emojiGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: space(2) },
-  emojiOption: {
-    width: 52,
-    height: 52,
-    borderRadius: radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  emojiSelected: { borderColor: colors.brand, borderWidth: 2, backgroundColor: colors.brandSoft },
-  pressed: { opacity: 0.8 },
-  emojiText: { fontSize: 26 },
-  classRow: { flexDirection: 'row', gap: space(3) },
-  classField: { flex: 1 },
-});
+const makeStyles = (t: Theme) =>
+  StyleSheet.create({
+    flex: { flex: 1 },
+    content: { padding: space(5), paddingBottom: space(10), gap: space(5) },
+    field: { gap: space(2.5) },
+    fieldLabel: { color: t.colors.textSecondary },
+    emojiGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: space(2) },
+    emojiOption: {
+      width: 52,
+      height: 52,
+      borderRadius: radius.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: t.colors.surface,
+      borderWidth: 1,
+      borderColor: t.colors.border,
+    },
+    emojiSelected: { borderColor: t.colors.brand, borderWidth: 2, backgroundColor: t.colors.brandSoft },
+    pressed: { opacity: 0.8 },
+    emojiText: { fontSize: 26 },
+    classRow: { flexDirection: 'row', gap: space(3) },
+    classField: { flex: 1 },
+  });

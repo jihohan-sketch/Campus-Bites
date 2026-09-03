@@ -3,7 +3,7 @@ import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useMemo } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { APP_SCHOOL, schoolKeyOf } from '../../config/school';
 import { Avatar } from '../../components/Avatar';
@@ -15,12 +15,15 @@ import { MealRatingPanel } from '../../components/MealRatingPanel';
 import { PastMealRatings } from '../../components/PastMealRatings';
 import { Pill } from '../../components/Pill';
 import { Screen } from '../../components/Screen';
+import { RowSkeleton } from '../../components/Skeleton';
+import { FadeIn } from '../../components/motion';
 import { useAuth } from '../../context/AuthContext';
 import { useCrowd } from '../../hooks/useCrowd';
 import { useMeals } from '../../hooks/useMeals';
+import { useNow } from '../../hooks/useNow';
 import type { MainTabParamList, RootStackParamList } from '../../navigation/types';
 import { CROWD_WINDOW_MS } from '../../services/crowd';
-import { colors, crowdStepFor, mealTheme, radius, shadow, space, type } from '../../theme';
+import { radius, space, type as text, useStyles, useTheme, type Theme } from '../../theme';
 import type { CrowdReport } from '../../types';
 import { currentHourInKst, formatRelativeTime, todayInKst, toYmd } from '../../utils/date';
 import { currentMealType } from '../../utils/meal';
@@ -29,15 +32,23 @@ type Props = BottomTabScreenProps<MainTabParamList, 'Cafeteria'>;
 
 export function CafeteriaScreen(_props: Props) {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { profile, user } = useAuth();
+  const t = useTheme();
+  const styles = useStyles(makeStyles);
+
+  const { profile, user, firebaseEnabled } = useAuth();
   const schoolKey = schoolKeyOf();
+  const uid = profile?.uid ?? null;
 
-  const { reports, summary, loading, error, now } = useCrowd(schoolKey);
+  const { reports, summary, loading, error, now } = useCrowd(schoolKey, uid);
 
-  const today = useMemo(() => todayInKst(), []);
+  // A one minute tick rolls the date and the rated service over on their own.
+  const tick = useNow(60000);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const today = useMemo(() => todayInKst(), [tick]);
   const todayYmd = toYmd(today);
   // Rate whichever service is happening around now, not always lunch.
-  const ratedMealType = useMemo(() => currentMealType(currentHourInKst()), []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const ratedMealType = useMemo(() => currentMealType(currentHourInKst()), [tick]);
   const { meals } = useMeals(today);
 
   const { live, earlier } = useMemo(() => {
@@ -49,76 +60,93 @@ export function CafeteriaScreen(_props: Props) {
   }, [reports, now]);
 
   return (
-    <Screen>
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.header}>
-          <Text style={[type.caption, styles.eyebrow]} numberOfLines={1}>
-            {APP_SCHOOL.schoolName}
-          </Text>
-          <Text style={[type.display, styles.title]}>급식실 현황</Text>
-          <Text style={[type.caption, styles.subtitle]}>
-            줄 서는 시간과 오늘 급식 평가를 한눈에
-          </Text>
-        </View>
-
-        <LunchLineLive />
-
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={[type.label, styles.sectionTitle]}>실시간 제보 기반 혼잡도</Text>
-            <Pill label={`최근 ${Math.round(CROWD_WINDOW_MS / 60000)}분`} />
+    <Screen bloom={t.meal[ratedMealType].soft}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <FadeIn index={0}>
+          <View style={styles.header}>
+            <Text style={[text.overline, styles.eyebrow]} numberOfLines={1}>
+              {APP_SCHOOL.schoolName}
+            </Text>
+            <Text style={[text.hero, styles.title]}>급식실 현황</Text>
+            <Text style={[text.body, styles.subtitle]}>
+              줄 서는 시간과 오늘 급식 평가를 한눈에
+            </Text>
           </View>
+        </FadeIn>
 
-          {loading ? (
-            <View style={styles.loading}>
-              <ActivityIndicator color={colors.brand} />
+        <FadeIn index={1}>
+          <LunchLineLive />
+        </FadeIn>
+
+        <FadeIn index={2}>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={[text.overline, styles.sectionTitle]}>실시간 제보 기반 혼잡도</Text>
+              <Pill label={`최근 ${Math.round(CROWD_WINDOW_MS / 60000)}분`} />
             </View>
-          ) : (
-            <CrowdMeter summary={summary} now={now} />
-          )}
-        </View>
 
-        {error ? <Text style={[type.caption, styles.error]}>{error}</Text> : null}
-
-        <Button
-          label={user ? '지금 상황 제보하기' : '로그인하고 제보하기'}
-          onPress={() =>
-            user ? navigation.navigate('CrowdReport') : navigation.navigate('SignIn')
-          }
-          size="lg"
-          fullWidth
-          leading={<Ionicons name="megaphone-outline" size={18} color={colors.white} />}
-        />
-
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={[type.label, styles.sectionTitle]}>실시간 제보</Text>
-            <Pill label={`${live.length}건`} />
+            {loading ? (
+              <View style={styles.loading}>
+                <RowSkeleton />
+                <RowSkeleton />
+              </View>
+            ) : (
+              <CrowdMeter summary={summary} now={now} />
+            )}
           </View>
+        </FadeIn>
 
-          {live.length === 0 ? (
-            <EmptyState
-              emoji="📣"
-              title="아직 제보가 없어요"
-              description="줄이 얼마나 긴지 알려 주면 친구들이 시간을 아낄 수 있어요."
-            />
-          ) : (
-            <View style={styles.reportList}>
-              {live.map((report) => (
-                <ReportRow
-                  key={report.id}
-                  report={report}
-                  now={now}
-                  isMine={report.authorUid === profile?.uid}
-                />
-              ))}
+        {error ? <Text style={[text.caption, styles.error]}>{error}</Text> : null}
+
+        {firebaseEnabled ? (
+          <Button
+            label={user ? '지금 상황 제보하기' : '로그인하고 제보하기'}
+            onPress={() => (user ? navigation.navigate('CrowdReport') : navigation.navigate('SignIn'))}
+            size="lg"
+            fullWidth
+            leading={<Ionicons name="megaphone" size={17} color={t.colors.onAccent} />}
+          />
+        ) : (
+          <View style={styles.offlineNotice}>
+            <Ionicons name="cloud-offline-outline" size={16} color={t.colors.textSecondary} />
+            <Text style={[text.caption, styles.offlineText]}>
+              실시간 제보는 서버 연결 후 열려요. 위의 예상 혼잡도는 지금도 볼 수 있어요.
+            </Text>
+          </View>
+        )}
+
+        {firebaseEnabled ? (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={[text.overline, styles.sectionTitle]}>실시간 제보</Text>
+              <Pill label={`${live.length}건`} />
             </View>
-          )}
-        </View>
+
+            {live.length === 0 ? (
+              <EmptyState
+                emoji="📣"
+                title="아직 제보가 없어요"
+                description="줄이 얼마나 긴지 알려 주면 친구들이 시간을 아낄 수 있어요."
+              />
+            ) : (
+              <View style={styles.reportList}>
+                {live.map((report, index) => (
+                  <FadeIn key={report.id} index={index} offset={10}>
+                    <ReportRow
+                      report={report}
+                      now={now}
+                      isMine={report.authorUid === profile?.uid}
+                    />
+                  </FadeIn>
+                ))}
+              </View>
+            )}
+          </View>
+        ) : null}
 
         {earlier.length > 0 ? (
           <View style={styles.section}>
-            <Text style={[type.label, styles.sectionTitle]}>지난 제보</Text>
+            <Text style={[text.overline, styles.sectionTitle]}>지난 제보</Text>
             <View style={styles.reportList}>
               {earlier.slice(0, 20).map((report) => (
                 <ReportRow
@@ -139,9 +167,10 @@ export function CafeteriaScreen(_props: Props) {
           mealType={ratedMealType}
           meal={meals[ratedMealType]}
           profile={profile}
+          onRequestSignIn={() => navigation.navigate('SignIn')}
         />
 
-        <PastMealRatings schoolKey={schoolKey} today={today} mealType={ratedMealType} />
+        <PastMealRatings schoolKey={schoolKey} today={today} mealType={ratedMealType} uid={uid} />
       </ScrollView>
     </Screen>
   );
@@ -158,16 +187,22 @@ function ReportRow({
   isMine: boolean;
   faded?: boolean;
 }) {
-  const step = crowdStepFor(report.level);
-  const meal = mealTheme[report.mealType];
+  const t = useTheme();
+  const styles = useStyles(makeStyles);
+  const step = t.crowdStep(report.level);
+  const meal = t.meal[report.mealType];
 
   return (
-    <View style={[styles.reportRow, shadow.sm, faded ? styles.reportFaded : null]}>
+    <View style={[styles.reportRow, t.shadow.xs, faded ? styles.reportFaded : null]}>
+      {/* A colour stripe keyed to the reading, so a list of reports scans as a
+          trend rather than as a wall of text. */}
+      <View style={[styles.reportStripe, { backgroundColor: step.color }]} />
+
       <Avatar emoji={report.authorEmoji} size={40} ringColor={step.color} />
 
       <View style={styles.reportBody}>
         <View style={styles.reportTop}>
-          <Text style={[type.bodyStrong, styles.reportName]} numberOfLines={1}>
+          <Text style={[text.bodyStrong, styles.reportName]} numberOfLines={1}>
             {isMine ? '나' : report.authorName}
           </Text>
           <Pill label={step.label} color={step.color} background={step.soft} />
@@ -175,12 +210,12 @@ function ReportRow({
         </View>
 
         {report.note ? (
-          <Text style={[type.body, styles.reportNote]} numberOfLines={2}>
+          <Text style={[text.body, styles.reportNote]} numberOfLines={2}>
             {report.note}
           </Text>
         ) : null}
 
-        <Text style={[type.caption, styles.reportMeta]}>
+        <Text style={[text.caption, styles.reportMeta]}>
           {report.waitMinutes > 0 ? `대기 약 ${report.waitMinutes}분 · ` : ''}
           {formatRelativeTime(report.createdAt, now)}
         </Text>
@@ -189,29 +224,46 @@ function ReportRow({
   );
 }
 
-const styles = StyleSheet.create({
-  content: { padding: space(5), paddingBottom: space(10), gap: space(5) },
-  header: { gap: space(1) },
-  eyebrow: { color: colors.brand, fontWeight: '700', letterSpacing: 0.4 },
-  title: { color: colors.text },
-  subtitle: { color: colors.textSecondary },
-  loading: { paddingVertical: space(12), alignItems: 'center' },
-  error: { color: colors.danger },
-  section: { gap: space(3) },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: space(2) },
-  sectionTitle: { color: colors.textSecondary },
-  reportList: { gap: space(2.5) },
-  reportRow: {
-    flexDirection: 'row',
-    gap: space(3),
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: space(4),
-  },
-  reportFaded: { opacity: 0.62 },
-  reportBody: { flex: 1, gap: space(1.5) },
-  reportTop: { flexDirection: 'row', alignItems: 'center', gap: space(2), flexWrap: 'wrap' },
-  reportName: { color: colors.text },
-  reportNote: { color: colors.text },
-  reportMeta: { color: colors.textMuted },
-});
+const makeStyles = (t: Theme) =>
+  StyleSheet.create({
+    content: { padding: space(5), paddingBottom: space(30), gap: space(5) },
+    header: { gap: space(1.5) },
+    eyebrow: { color: t.colors.brand },
+    title: { color: t.colors.text },
+    subtitle: { color: t.colors.textSecondary },
+    loading: { gap: space(2) },
+    error: { color: t.colors.danger },
+    section: { gap: space(3) },
+    sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: space(2) },
+    sectionTitle: { color: t.colors.textSecondary },
+    reportList: { gap: space(2.5) },
+    reportRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: space(3),
+      backgroundColor: t.colors.surface,
+      borderRadius: radius.lg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: t.colors.border,
+      padding: space(4),
+      paddingLeft: space(4.5),
+      overflow: 'hidden',
+    },
+    reportStripe: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 4 },
+    reportFaded: { opacity: 0.55 },
+    reportBody: { flex: 1, gap: space(1.5) },
+    reportTop: { flexDirection: 'row', alignItems: 'center', gap: space(2), flexWrap: 'wrap' },
+    reportName: { color: t.colors.text },
+    reportNote: { color: t.colors.text },
+    reportMeta: { color: t.colors.textMuted },
+    offlineNotice: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: space(2),
+      backgroundColor: t.colors.surfaceMuted,
+      borderRadius: radius.md,
+      paddingHorizontal: space(4),
+      paddingVertical: space(3.5),
+    },
+    offlineText: { color: t.colors.textSecondary, flex: 1 },
+  });
