@@ -1,25 +1,43 @@
 {
   "expo": {
-    "name": "school-meal-app",
+    "name": "오늘 뭐 먹지",
     "slug": "school-meal-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.schoolmeal.app"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#F6F5F3",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.schoolmeal.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "scheme": "schoolmeal",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F6F5F3"
+    },
+    "extra": {
+      "firebaseApiKey": "",
+      "firebaseAuthDomain": "",
+      "firebaseProjectId": "",
+      "firebaseStorageBucket": "",
+      "firebaseMessagingSenderId": "",
+      "firebaseAppId": "",
+      "neisApiKey": ""
     }
   }
 }
