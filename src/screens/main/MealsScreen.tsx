@@ -11,7 +11,9 @@ import { DayNavigator } from '../../components/DayNavigator';
 import { EmptyState } from '../../components/EmptyState';
 import { LunchLineLive } from '../../components/LunchLineLive';
 import { MealCard } from '../../components/MealCard';
+import { PastMealRatings } from '../../components/PastMealRatings';
 import { Screen } from '../../components/Screen';
+import { TodayMealRatingCard } from '../../components/TodayMealRatingCard';
 import { MealCardSkeleton } from '../../components/Skeleton';
 import { FadeIn, PressableScale } from '../../components/motion';
 import { useAuth } from '../../context/AuthContext';
@@ -23,6 +25,7 @@ import { radius, space, type as text, useStyles, useTheme, type Theme } from '..
 import { MEAL_TYPES } from '../../types';
 import {
   currentHourInKst,
+  daysBetween,
   formatKoreanDate,
   formatLongKoreanDate,
   fromYmd,
@@ -61,8 +64,21 @@ export function MealsScreen(_props: Props) {
     [isToday, tick],
   );
 
+  /** Whichever service is on right now, regardless of the day being browsed. */
+  const currentService = useMemo(
+    () => currentMealType(currentHourInKst()),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tick],
+  );
+
+  // Today the card follows whichever service is on; on any other day lunch is
+  // the one students actually came to look up.
+  const ratedMeal = highlightedMeal ?? 'lunch';
+  // A meal that has not been served yet can be read but not scored.
+  const isRatable = daysBetween(today, date) <= 0;
+
   // The page takes its temperature from whichever service is on right now.
-  const bloom = t.meal[highlightedMeal ?? currentMealType(currentHourInKst())].soft;
+  const bloom = t.meal[highlightedMeal ?? currentService].soft;
 
   const hasAnyMeal = MEAL_TYPES.some((mealType) => meals[mealType] !== null);
 
@@ -115,23 +131,6 @@ export function MealsScreen(_props: Props) {
           </View>
         </FadeIn>
 
-        {isToday && summary.reportCount > 0 ? (
-          <FadeIn index={2}>
-            <PressableScale
-              accessibilityRole="button"
-              onPress={() => navigation.navigate('Main', { screen: 'Cafeteria' })}
-              scaleTo={0.985}
-              style={styles.crowdLink}
-            >
-              <CrowdMeter summary={summary} now={now} />
-              <View style={styles.crowdHint}>
-                <Text style={[text.caption, styles.crowdHintText]}>급식실 혼잡도 자세히 보기</Text>
-                <Ionicons name="chevron-forward" size={13} color={t.colors.textSecondary} />
-              </View>
-            </PressableScale>
-          </FadeIn>
-        ) : null}
-
         {error ? (
           <View style={styles.errorBanner}>
             <Ionicons name="cloud-offline-outline" size={16} color={t.colors.warning} />
@@ -167,24 +166,67 @@ export function MealsScreen(_props: Props) {
         ) : (
           <View style={styles.cards}>
             {MEAL_TYPES.map((mealType, index) => (
-              <React.Fragment key={mealType}>
-                <FadeIn index={index + 3}>
-                  <MealCard
-                    type={mealType}
-                    meal={meals[mealType]}
-                    isCurrent={highlightedMeal === mealType && meals[mealType] !== null}
-                    onPress={() => openDetail(mealType)}
-                  />
-                </FadeIn>
-                {mealType === 'lunch' && meals.lunch !== null ? (
-                  <FadeIn index={index + 4}>
-                    <LunchLineLive muted={!isToday} compact />
-                  </FadeIn>
-                ) : null}
-              </React.Fragment>
+              <FadeIn key={mealType} index={index + 2}>
+                <MealCard
+                  type={mealType}
+                  meal={meals[mealType]}
+                  isCurrent={highlightedMeal === mealType && meals[mealType] !== null}
+                  onPress={() => openDetail(mealType)}
+                />
+              </FadeIn>
             ))}
           </View>
         )}
+
+        {/* Below the menu, in the order a hungry student asks the questions:
+            how long is the line, when should I go, and was it any good. */}
+        {hasAnyMeal && meals.lunch !== null ? (
+          <FadeIn index={5}>
+            <LunchLineLive muted={!isToday} compact />
+          </FadeIn>
+        ) : null}
+
+        {hasAnyMeal && meals[ratedMeal] !== null ? (
+          <FadeIn index={6}>
+            <TodayMealRatingCard
+              schoolKey={schoolKeyOf()}
+              date={toYmd(date)}
+              mealType={ratedMeal}
+              profile={profile}
+              ratable={isRatable}
+              onRequestSignIn={() => navigation.navigate('SignIn')}
+              onSeeAll={() => navigation.navigate('Main', { screen: 'Cafeteria' })}
+            />
+          </FadeIn>
+        ) : null}
+
+        {isToday && summary.reportCount > 0 ? (
+          <FadeIn index={7}>
+            <PressableScale
+              accessibilityRole="button"
+              onPress={() => navigation.navigate('Main', { screen: 'Cafeteria' })}
+              scaleTo={0.985}
+              style={styles.crowdLink}
+            >
+              <CrowdMeter summary={summary} now={now} />
+              <View style={styles.crowdHint}>
+                <Text style={[text.caption, styles.crowdHintText]}>급식실 혼잡도 자세히 보기</Text>
+                <Ionicons name="chevron-forward" size={13} color={t.colors.textSecondary} />
+              </View>
+            </PressableScale>
+          </FadeIn>
+        ) : null}
+
+        <FadeIn index={8}>
+          {/* The ranking always counts back from today, so it stays on today's
+              service rather than swapping when the student pages to another day. */}
+          <PastMealRatings
+            schoolKey={schoolKeyOf()}
+            today={today}
+            mealType={currentService}
+            uid={profile?.uid ?? null}
+          />
+        </FadeIn>
       </ScrollView>
     </Screen>
   );

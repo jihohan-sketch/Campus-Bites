@@ -35,6 +35,16 @@ export function currentMinutesInKst(): number {
   return d.getUTCHours() * 60 + d.getUTCMinutes();
 }
 
+/**
+ * Minutes since midnight in Korea at `timestamp`, including the fraction of
+ * the current minute. A live indicator that refreshes every few seconds needs
+ * a clock that moves between minutes, or it visibly stalls and then jumps.
+ */
+export function kstMinutesAt(timestamp: number = Date.now()): number {
+  const d = new Date(timestamp + KST_OFFSET_MS);
+  return d.getUTCHours() * 60 + d.getUTCMinutes() + d.getUTCSeconds() / 60;
+}
+
 function fromUtcMillis(millis: number): CivilDate {
   const d = new Date(millis);
   return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate() };
@@ -134,4 +144,10 @@ export function formatRelativeTime(timestamp: number, now: number = Date.now()):
 export function formatKstClock(timestamp: number): string {
   const d = new Date(timestamp + KST_OFFSET_MS);
   return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+}
+
+/** `12:24:31` — for readings that refresh faster than once a minute. */
+export function formatKstClockSeconds(timestamp: number): string {
+  const d = new Date(timestamp + KST_OFFSET_MS);
+  return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
 }

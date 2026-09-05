@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { Pill } from './Pill';
 import { Skeleton } from './Skeleton';
 import { StarRating } from './StarRating';
 import { fetchMealsInRange } from '../config/school';
@@ -117,6 +118,13 @@ export function PastMealRatings({
       <View style={styles.header}>
         <Text style={styles.titleEmoji}>🏆</Text>
         <Text style={[text.subheading, styles.title]}>지난 급식 순위</Text>
+        {/* Which service is being ranked, so an empty 조식 list does not read
+            as "nobody has ever rated anything". */}
+        <Pill
+          label={t.meal[mealType].label}
+          color={t.meal[mealType].tint}
+          background={t.meal[mealType].soft}
+        />
       </View>
 
       {loading ? (

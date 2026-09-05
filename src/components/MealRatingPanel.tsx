@@ -1,15 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  Animated,
-  Easing,
-  LayoutAnimation,
-  Platform,
-  StyleSheet,
-  Text,
-  UIManager,
-  View,
-} from 'react-native';
+import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 
 import { Avatar } from './Avatar';
 import { Button } from './Button';
@@ -23,11 +14,7 @@ import { radius, space, type as text, useStyles, useTheme, type Theme } from '..
 import type { Meal, MealRatingSummary, MealTag, MealType, StarValue, UserProfile } from '../types';
 import { formatRelativeTime } from '../utils/date';
 import { foodEmoji } from '../utils/foodIcon';
-import { PressableScale, USE_NATIVE_DRIVER, useAnimatedTo } from './motion';
-
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
+import { PressableScale, USE_NATIVE_DRIVER, useAnimatedTo, useChangeFade } from './motion';
 
 const STAR_ROWS: StarValue[] = [5, 4, 3, 2, 1];
 
@@ -76,10 +63,12 @@ export function MealRatingPanel({
     setComment(mine?.comment ?? '');
   }, [mine, composerOpen]);
 
-  const toggleComposer = (open: boolean) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setComposerOpen(open);
-  };
+  // The composer fades in rather than animating the layout around it:
+  // `LayoutAnimation` animates the *whole* next layout pass, which on a long
+  // scrolling page means every card below re-flows in step with the panel.
+  const composerFade = useChangeFade(composerOpen);
+
+  const toggleComposer = (open: boolean) => setComposerOpen(open);
 
   const onSubmit = async () => {
     const ok = await submit({ stars, tag, comment });
@@ -133,7 +122,7 @@ export function MealRatingPanel({
       {error ? <Text style={[text.caption, styles.error]}>{error}</Text> : null}
 
       {composerOpen ? (
-        <View style={styles.composer}>
+        <Animated.View style={[styles.composer, { opacity: composerFade }]}>
           <Text style={[text.label, styles.composerLabel]}>몇 점을 주시겠어요?</Text>
           <StarRating value={stars} onChange={setStars} size={36} />
 
@@ -195,7 +184,7 @@ export function MealRatingPanel({
               style={styles.composerButton}
             />
           </View>
-        </View>
+        </Animated.View>
       ) : mine ? (
         <View style={[styles.mineCard, justSubmitted ? styles.mineCelebrate : null]}>
           <View style={styles.mineTop}>

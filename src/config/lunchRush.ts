@@ -20,6 +20,18 @@ export interface RushBand {
   label: string;
   /** One line a student can act on. */
   detail: string;
+  /** Short crowd word for the meter — the same wording as the 혼잡도 scale. */
+  crowdLabel: string;
+  /**
+   * How full the queue is at the band's start and end, 0–1. Bands are
+   * contiguous (each starts where the previous ended) so a reading taken every
+   * few seconds slides along one continuous curve instead of stepping.
+   */
+  load: readonly [number, number];
+  /** Queue wait in minutes at the band's start and end, interpolated the same way. */
+  wait: readonly [number, number];
+  /** The one line shown under the crowd bar. */
+  message: string;
 }
 
 /**
@@ -39,6 +51,10 @@ export const LUNCH_RUSH_BANDS: RushBand[] = [
     status: 'VERY BUSY',
     label: '가장 혼잡',
     detail: '배식 시작 직후라 한 번에 몰려요',
+    crowdLabel: '매우 혼잡',
+    load: [0.72, 0.98],
+    wait: [6, 12],
+    message: '지금은 많이 붐벼요',
   },
   {
     level: 'busy',
@@ -48,6 +64,10 @@ export const LUNCH_RUSH_BANDS: RushBand[] = [
     status: 'MODERATE',
     label: '조금 혼잡',
     detail: '줄은 있지만 금방 줄어들어요',
+    crowdLabel: '혼잡',
+    load: [0.98, 0.34],
+    wait: [12, 3],
+    message: '지금은 조금 붐벼요',
   },
   {
     level: 'calm',
@@ -57,6 +77,10 @@ export const LUNCH_RUSH_BANDS: RushBand[] = [
     status: 'ALMOST EMPTY',
     label: '거의 한산',
     detail: '기다리지 않고 바로 받을 수 있어요',
+    crowdLabel: '한산',
+    load: [0.34, 0.05],
+    wait: [3, 0],
+    message: '지금 가면 거의 안 기다려요',
   },
 ];
 
@@ -71,16 +95,6 @@ export function bandAt(minutes: Minutes): RushBand | null {
   );
 }
 
-/** The quietest band that has not started yet, or `null` once lunch is over. */
-export function nextCalmerBand(minutes: Minutes): RushBand | null {
-  const current = bandAt(minutes);
-  return (
-    LUNCH_RUSH_BANDS.find(
-      (band) => band.end > minutes && (!current || band.start >= current.end) && band.level === 'calm',
-    ) ?? null
-  );
-}
-
 /** `690` → `11:30`. */
 export function formatClock(minutes: Minutes): string {
   const hour = Math.floor(minutes / 60);
@@ -89,59 +103,6 @@ export function formatClock(minutes: Minutes): string {
 }
 
 export type RushPhase = 'before' | 'during' | 'after';
-
-export interface RushAdvice {
-  phase: RushPhase;
-  /** The band happening right now, or `null` when lunch is not being served. */
-  current: RushBand | null;
-  /** Headline shown at the top of the timeline. */
-  headline: string;
-  /** Supporting line; empty when the headline says it all. */
-  hint: string;
-}
-
-/** Turns the current clock into the one sentence a hungry student needs. */
-export function rushAdvice(minutes: Minutes): RushAdvice {
-  const calm = LUNCH_RUSH_BANDS[LUNCH_RUSH_BANDS.length - 1];
-
-  if (minutes < LUNCH_RUSH_START) {
-    return {
-      phase: 'before',
-      current: null,
-      headline: `${formatClock(calm.start)} 이후에 가면 거의 안 기다려요`,
-      hint: `배식은 ${formatClock(LUNCH_RUSH_START)}에 시작해요`,
-    };
-  }
-
-  if (minutes >= LUNCH_RUSH_END) {
-    return {
-      phase: 'after',
-      current: null,
-      headline: '오늘 점심 배식이 끝났어요',
-      hint: `내일은 ${formatClock(calm.start)} 이후를 노려 보세요`,
-    };
-  }
-
-  const current = bandAt(minutes)!;
-
-  if (current.level === 'calm') {
-    return {
-      phase: 'during',
-      current,
-      headline: '지금 가면 거의 안 기다려요',
-      hint: `${formatClock(LUNCH_RUSH_END)}에 배식이 끝나요`,
-    };
-  }
-
-  const waitMinutes = calm.start - minutes;
-  return {
-    phase: 'during',
-    current,
-    headline:
-      current.level === 'peak' ? '지금이 제일 붐벼요' : '아직 줄이 조금 있어요',
-    hint: `${waitMinutes}분 뒤(${formatClock(calm.start)})면 한산해져요`,
-  };
-}
 
 /** Where `minutes` sits across the service window, clamped to 0–1. */
 export function progressOf(minutes: Minutes): number {

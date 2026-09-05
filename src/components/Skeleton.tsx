@@ -3,6 +3,7 @@ import React, { useEffect, useRef } from 'react';
 import {
   Animated,
   Easing,
+  Platform,
   StyleSheet,
   View,
   type DimensionValue,
@@ -21,46 +22,75 @@ interface SkeletonProps {
   style?: StyleProp<ViewStyle>;
 }
 
+const SWEEP_DISTANCE = 260;
+const SWEEP_MS = 1150;
+/** A beat of stillness between passes, so it shimmers rather than strobes. */
+const SWEEP_REST_MS = 280;
+
+/**
+ * The same sweep as a CSS animation. A loading screen is the worst possible
+ * moment to hand the web build a per-frame JS animation for every placeholder
+ * bar on the page, and the compositor can run this one for free.
+ */
+const webSweep = StyleSheet.create({
+  sweep: {
+    animationKeyframes: {
+      '0%': { transform: [{ translateX: -SWEEP_DISTANCE }] },
+      [`${((SWEEP_MS / (SWEEP_MS + SWEEP_REST_MS)) * 100).toFixed(1)}%`]: {
+        transform: [{ translateX: SWEEP_DISTANCE }],
+      },
+      '100%': { transform: [{ translateX: SWEEP_DISTANCE }] },
+    },
+    animationDuration: `${SWEEP_MS + SWEEP_REST_MS}ms`,
+    animationIterationCount: 'infinite',
+    animationTimingFunction: 'ease-in-out',
+  } as unknown as ViewStyle,
+});
+
 /** One placeholder bar with a highlight sweeping across it. */
 export function Skeleton({ width = '100%', height = 14, round, style }: SkeletonProps) {
   const theme = useTheme();
   const styles = useStyles(makeStyles);
   const sweep = useRef(new Animated.Value(0)).current;
+  const isWeb = Platform.OS === 'web';
 
   useEffect(() => {
+    if (isWeb) return;
     const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(sweep, {
           toValue: 1,
-          duration: 1150,
+          duration: SWEEP_MS,
           easing: Easing.inOut(Easing.quad),
           useNativeDriver: USE_NATIVE_DRIVER,
         }),
-        // A beat of stillness between passes, so it shimmers rather than strobes.
-        Animated.delay(280),
+        Animated.delay(SWEEP_REST_MS),
       ]),
     );
     animation.start();
     return () => animation.stop();
-  }, [sweep]);
+  }, [sweep, isWeb]);
 
   return (
     <View
       style={[styles.bar, { width, height, borderRadius: round ?? height / 2 }, style]}
     >
       <Animated.View
+        pointerEvents="none"
         style={[
           StyleSheet.absoluteFill,
-          {
-            transform: [
-              {
-                translateX: sweep.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [-260, 260],
-                }),
+          isWeb
+            ? webSweep.sweep
+            : {
+                transform: [
+                  {
+                    translateX: sweep.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [-SWEEP_DISTANCE, SWEEP_DISTANCE],
+                    }),
+                  },
+                ],
               },
-            ],
-          },
         ]}
       >
         <LinearGradient
