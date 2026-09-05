@@ -92,9 +92,16 @@ export function MainTabs() {
           paddingTop: space(2),
           // Matches the capped content column so the bar does not run the full
           // width of a desktop browser window.
+          //
+          // The navigator pins the bar with `start: 0`/`end: 0`, which makes it
+          // absolutely positioned on both edges — `alignSelf` is ignored once
+          // both insets are set, so the capped bar used to sit against the left
+          // edge of a wide window instead of under the content column. Auto
+          // horizontal margins are what actually centre an absolutely
+          // positioned, width-capped box, in Yoga and in CSS alike.
           width: '100%',
           maxWidth: CONTENT_MAX_WIDTH,
-          alignSelf: 'center',
+          marginHorizontal: 'auto',
         },
         // A frosted bar over a fade-to-background, so content scrolls under it.
         tabBarBackground: () => (
