@@ -20,7 +20,7 @@ const ICONS: Record<
 > = {
   Meals: ['restaurant', 'restaurant-outline'],
   Cafeteria: ['people', 'people-outline'],
-  Profile: ['person-circle', 'person-circle-outline'],
+  Profile: ['ellipsis-horizontal-circle', 'ellipsis-horizontal-circle-outline'],
 };
 
 /**
@@ -128,7 +128,7 @@ export function MainTabs() {
     >
       <Tab.Screen name="Meals" component={MealsScreen} options={{ title: '급식' }} />
       <Tab.Screen name="Cafeteria" component={CafeteriaScreen} options={{ title: '혼잡도' }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: '내 정보' }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: '더보기' }} />
     </Tab.Navigator>
   );
 }
