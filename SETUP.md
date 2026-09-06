@@ -143,3 +143,21 @@ property "//"`) 설명을 여기에 옮겨 둡니다. 두 줄 다 지우면 안 
 살아 있으면 환경변수를 바꿔도 **예전 값이 그대로 남은 번들이 나옵니다.** 그래서
 `vercel.json`의 빌드 명령에 `--clear`가 붙어 있습니다. 로컬에서도 값을 바꾼 뒤에는
 `npx expo start -c` 또는 `npx expo export --platform web --clear`를 쓰세요.
+
+**Vercel 환경변수는 반드시 `Config` 타입으로** — `EXPO_PUBLIC_*`처럼 공개 프레임워크
+접두사가 붙은 변수를 `Secret`으로 만들면 Vercel이 빌드에 값을 **아예 넘기지 않습니다.**
+(`Environment variables with a public framework prefix cannot use visibility: secret`)
+
+대시보드에는 6개가 멀쩡히 등록된 것처럼 보이는데 배포된 앱은 계속 "이 기기에만 저장"
+상태로 남는, 알아채기 어려운 실패입니다. `Secret`은 쓰기 전용이라 타입 변경이 안 되니
+**지우고 `Config`로 다시 만들어야** 합니다. 실제로 2026-09-06에 이 문제로 하루치를
+날렸습니다.
+
+값이 제대로 들어갔는지는 배포된 번들에서 직접 확인하는 게 가장 확실합니다:
+
+```bash
+B=$(curl -s https://campus-bites-omega.vercel.app/ \
+  | grep -oE '/_expo/static/js/web/index-[a-f0-9]+\.js')
+curl -s "https://campus-bites-omega.vercel.app$B" | grep -c "$(grep API_KEY .env | cut -d= -f2)"
+# 1 이면 인라인 성공, 0 이면 빌드에 값이 안 넘어간 것
+```
