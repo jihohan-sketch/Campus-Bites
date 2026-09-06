@@ -19,12 +19,35 @@ import { englishDishName } from './dishEnglish';
  * Appended to every prompt, unchanged. This is the entire style contract — if
  * it drifts, the grid stops looking like one set, so change it deliberately
  * and all at once rather than per dish.
+ *
+ * Note the cost of touching it: the prompt is part of the URL, so any edit
+ * re-rolls the picture for all 161 dishes at once — including the ones that
+ * are already right — and every one of them has to be drawn again before the
+ * menu stops showing placeholders. That is why a dish that comes out wrong is
+ * fixed in `OVERRIDES` below rather than by rewording this.
  */
 const STYLE =
   ', korean school cafeteria food, one portion plated in a simple white ceramic dish, ' +
   'centered, straight top-down overhead shot, soft even studio lighting, ' +
   'pure white seamless background, appetizing realistic food photography, ' +
   'sharp focus, no text, no hands, no cutlery';
+
+/**
+ * The style an overridden dish is drawn with instead.
+ *
+ * The default above names the serving vessel — "plated in a simple white
+ * ceramic dish" — which is right for the plated Korean mains that are most of
+ * this menu and actively wrong for everything served in a bowl. Cereal came
+ * back as a white mush and udon as a puddle because the prompt insisted on a
+ * plate while the dish is a bowl. This drops that instruction and lets the
+ * subject choose its own vessel; it measurably fixed both. It also drops the
+ * negatives ("no hands, no cutlery"), which this generator does not honour.
+ */
+const OVERRIDE_STYLE =
+  ', a single serving of this exact dish, served in the vessel it is normally ' +
+  'eaten from, filling most of the frame, straight top-down overhead shot, ' +
+  'soft even studio lighting, plain white background, ' +
+  'appetizing realistic food photography, sharp focus';
 
 const ENDPOINT = 'https://image.pollinations.ai/prompt/';
 
@@ -124,6 +147,80 @@ const SUBJECT_RULES: SubjectRule[] = [
 /** Used when nothing matches — still a plated meal, never an empty frame. */
 const FALLBACK_SUBJECT = 'Korean school lunch dish';
 
+/* ------------------------------------------------------------- overrides */
+
+/**
+ * The escape hatch for a dish the generator gets wrong.
+ *
+ * The English name is usually the best prompt available, but it is a *menu*
+ * name, and a menu name is not always a description. "Japchae (Glass Noodle
+ * Stir-fry)" is a dish the model does not know by name, so it drew orange
+ * wheat noodles; spelling out what japchae physically looks like is what fixes
+ * it. Three levers, in the order to reach for them:
+ *
+ *   `prompt` — describe the food instead of naming it. Use this first; it is
+ *     the only one that also fixes the dish for a size nobody has warmed yet.
+ *   `reroll` — the prompt is right but this particular seed drew something
+ *     odd. Bump the number until the picture is good; any value re-rolls.
+ *   `url` — give up on generating and pin a photograph. The URL is used
+ *     verbatim at every size, so point it at something that stays put and that
+ *     you have the right to use — not a Google Images result, which is a
+ *     search page's temporary link to someone else's copyrighted file.
+ *
+ * Keys are matched the way {@link englishDishName} matches, ignoring spacing,
+ * so `시리얼 & 우유` and `시리얼&우유` are the same entry.
+ *
+ * Verify changes with `node scripts/audit-dish-images.mjs`, which draws every
+ * dish as a labelled contact sheet so a wrong picture is obvious at a glance.
+ */
+export interface DishImageOverride {
+  /** Replaces the subject the prompt is built from. */
+  prompt?: string;
+  /** Re-rolls the seed when the prompt is already right. Any value differs. */
+  reroll?: number;
+  /** A photograph used verbatim, bypassing the generator entirely. */
+  url?: string;
+}
+
+const OVERRIDES: Record<string, DishImageOverride> = {
+  // Named after a dish the model does not know, so it drew orange wheat
+  // noodles. Japchae is the opposite of that: dark, glossy and translucent.
+  잡채: {
+    prompt:
+      'Korean japchae, translucent brown sweet potato glass noodles stir-fried ' +
+      'with strips of beef, carrot, onion and spinach, glossy with sesame oil, ' +
+      'garnished with sesame seeds',
+  },
+  // Both of these are bowls, and the default style was insisting on a plate.
+  '시리얼 & 우유': {
+    prompt: 'a deep bowl of breakfast cereal flakes with cold milk poured over them',
+  },
+  우동국: {
+    prompt:
+      'a bowl of Japanese udon noodle soup, thick white wheat noodles in clear ' +
+      'broth, spring onion on top',
+  },
+  // The one dish the generator would not draw. "Banana" alone gave an empty
+  // white plate, and describing it gave surreal yellow rings — a plain piece
+  // of fruit turns out to be harder for it than a plated Korean main. Pinned
+  // to a real photograph instead: Wikimedia Commons, freely licensed, stable
+  // URL, and already shot on the white background the rest of the set uses.
+  // Note the /thumb/ resizing path is not reachable from every network, so
+  // this points at the original file.
+  바나나: {
+    url: 'https://upload.wikimedia.org/wikipedia/commons/e/e7/Banana_fruit_on_white_background.jpg',
+  },
+};
+
+/** Spacing-insensitive lookup, matching how the English names are keyed. */
+const OVERRIDES_BY_KEY = new Map<string, DishImageOverride>(
+  Object.entries(OVERRIDES).map(([korean, value]) => [korean.replace(/\s+/g, ''), value]),
+);
+
+function overrideFor(name: string): DishImageOverride | undefined {
+  return OVERRIDES_BY_KEY.get(name.replace(/\s+/g, ''));
+}
+
 /**
  * A stable 32-bit hash of the dish name, used as the generator's seed.
  *
@@ -148,6 +245,9 @@ function seedOf(name: string): number {
  * falls back to the keyword rules, and only then to a generic plate.
  */
 export function dishImageSubject(name: string): string {
+  const override = overrideFor(name)?.prompt;
+  if (override) return override;
+
   const english = englishDishName(name);
   if (english) return english;
 
@@ -168,7 +268,13 @@ export function dishImageSubject(name: string): string {
  * it, and the first student to open a new menu pays that cost.
  */
 export function dishImageUrl(name: string, size = 256): string {
-  const prompt = encodeURIComponent(`${dishImageSubject(name)}${STYLE}`);
-  const query = `width=${size}&height=${size}&seed=${seedOf(name)}&nologo=true`;
+  const override = overrideFor(name);
+  // A pinned photograph is already a picture; there is no size to ask it for.
+  if (override?.url) return override.url;
+
+  const style = override?.prompt ? OVERRIDE_STYLE : STYLE;
+  const prompt = encodeURIComponent(`${dishImageSubject(name)}${style}`);
+  const seed = seedOf(name) + (override?.reroll ?? 0);
+  const query = `width=${size}&height=${size}&seed=${seed}&nologo=true`;
   return `${ENDPOINT}${prompt}?${query}`;
 }
