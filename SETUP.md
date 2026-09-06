@@ -121,3 +121,20 @@ npx firebase deploy --only firestore:rules,firestore:indexes
   로그인만 보입니다 (팝업 플로우가 없어서 — `expo-auth-session`을 붙이면 열립니다).
 - 새 달 식단표는 빌드 없이 Firestore `menus` 컬렉션에 넣으면 반영됩니다
   (`menus/{schoolKey}_{YYYYMMDD}`, `src/services/menus.ts` 참고).
+
+---
+
+## `vercel.json` — 왜 이렇게 생겼나
+
+Vercel 설정 스키마는 주석용 `"//"` 키를 거부하므로(`should NOT have additional
+property "//"`) 설명을 여기에 옮겨 둡니다. 두 줄 다 지우면 안 되는 이유가
+있습니다.
+
+**`rewrites`의 정규식** — SPA 폴백은 **앱 경로에만** 걸려야 합니다. 실제 에셋
+경로까지 삼키면, 배포 도중처럼 파일이 잠깐 없는 순간에 엣지가 `.js` 요청에
+`index.html`을 돌려주고, 아래 immutable 헤더가 그 HTML을 방문자 브라우저에
+**1년치로 못 박아** 빈 화면이 됩니다. 그래서 `_expo/`·`assets/` 아래와 확장자가
+있는 경로를 제외해, 없는 에셋은 그냥 404가 나게 합니다.
+
+**`/index.html`의 `must-revalidate`** — 현재 번들 이름을 아는 건 이 셸 문서
+하나뿐이라, 매 로드마다 재검증해야 새 배포가 반영됩니다.
