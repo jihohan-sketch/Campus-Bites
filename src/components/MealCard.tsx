@@ -7,6 +7,7 @@ import { radius, space, type as text, useStyles, useTheme, type Theme } from '..
 import type { Meal, MealType } from '../types';
 import { foodEmoji } from '../utils/foodIcon';
 import { allergenLabel } from '../utils/meal';
+import { englishDishName } from '../utils/dishEnglish';
 import { Pulse, PressableScale } from './motion';
 
 interface MealCardProps {
@@ -102,6 +103,13 @@ export function MealCard({ type, meal, onPress, isCurrent = false }: MealCardPro
               </View>
               <View style={styles.dishText}>
                 <Text style={[text.bodyStrong, styles.dishName]}>{dish.name}</Text>
+                {/* VIS is an international school, so the English name sits
+                    under every dish rather than behind a language switch. */}
+                {englishDishName(dish.name) ? (
+                  <Text style={[text.caption, styles.dishNameEn]} numberOfLines={1}>
+                    {englishDishName(dish.name)}
+                  </Text>
+                ) : null}
                 {dish.allergens.length > 0 ? (
                   <Text style={[text.caption, styles.allergens]} numberOfLines={1}>
                     {dish.allergens.map(allergenLabel).join(' · ')}
@@ -199,6 +207,7 @@ const makeStyles = (t: Theme) =>
     dishEmoji: { fontSize: 16 },
     dishText: { flex: 1, gap: 1 },
     dishName: { color: t.colors.text },
+    dishNameEn: { color: t.colors.textSecondary },
     allergens: { color: t.colors.textMuted },
     more: { color: t.colors.textSecondary, paddingLeft: space(11), marginTop: -space(1) },
 

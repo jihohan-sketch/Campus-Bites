@@ -21,6 +21,7 @@ import {
 import { fromYmd, formatLongKoreanDate } from '../../utils/date';
 import { foodEmoji } from '../../utils/foodIcon';
 import { allergenLabel, collectAllergens } from '../../utils/meal';
+import { englishDishName } from '../../utils/dishEnglish';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MealDetail'>;
 
@@ -90,6 +91,11 @@ export function MealDetailScreen({ route }: Props) {
                 </View>
                 <View style={styles.dishText}>
                   <Text style={[text.bodyStrong, styles.dishName]}>{dish.name}</Text>
+                  {englishDishName(dish.name) ? (
+                    <Text style={[text.caption, styles.dishNameEn]}>
+                      {englishDishName(dish.name)}
+                    </Text>
+                  ) : null}
                   {dish.allergens.length > 0 ? (
                     <View style={styles.dishAllergens}>
                       {dish.allergens.map((code) => (
@@ -253,6 +259,7 @@ const makeStyles = (t: Theme) =>
     dishEmoji: { fontSize: 17 },
     dishText: { flex: 1, gap: space(1.5) },
     dishName: { color: t.colors.text },
+    dishNameEn: { color: t.colors.textSecondary },
     dishAllergens: { flexDirection: 'row', flexWrap: 'wrap', gap: space(1.5) },
 
     allergenWrap: {
