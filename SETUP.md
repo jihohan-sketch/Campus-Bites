@@ -138,3 +138,8 @@ property "//"`) 설명을 여기에 옮겨 둡니다. 두 줄 다 지우면 안 
 
 **`/index.html`의 `must-revalidate`** — 현재 번들 이름을 아는 건 이 셸 문서
 하나뿐이라, 매 로드마다 재검증해야 새 배포가 반영됩니다.
+
+**빌드 캐시 주의** — `EXPO_PUBLIC_*`는 번들 타임에 인라인되는데, Metro 캐시가
+살아 있으면 환경변수를 바꿔도 **예전 값이 그대로 남은 번들이 나옵니다.** 그래서
+`vercel.json`의 빌드 명령에 `--clear`가 붙어 있습니다. 로컬에서도 값을 바꾼 뒤에는
+`npx expo start -c` 또는 `npx expo export --platform web --clear`를 쓰세요.
