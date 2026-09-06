@@ -82,7 +82,7 @@ export function MealCard({ type, meal, onPress, isCurrent = false }: MealCardPro
               <Pulse duration={900} scaleTo={1.5} minOpacity={0.35}>
                 <View style={[styles.nowDot, { backgroundColor: theme.ink }]} />
               </Pulse>
-              <Text style={[text.overline, { color: theme.ink }]}>NOW</Text>
+              <Text style={[text.overline, { color: theme.ink }]}>지금</Text>
             </View>
           ) : null}
           {meal && meal.calories !== null ? (

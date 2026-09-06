@@ -15,7 +15,7 @@ export interface RushBand {
   start: Minutes;
   end: Minutes;
   emoji: string;
-  /** Status shown on the live badge, e.g. `VERY BUSY`. */
+  /** Status shown beside the band's time range, e.g. `매우 혼잡`. */
   status: string;
   label: string;
   /** One line a student can act on. */
@@ -48,7 +48,7 @@ export const LUNCH_RUSH_BANDS: RushBand[] = [
     start: H(11, 30),
     end: H(11, 40),
     emoji: '🔴',
-    status: 'VERY BUSY',
+    status: '매우 혼잡',
     label: '가장 혼잡',
     detail: '배식 시작 직후라 한 번에 몰려요',
     crowdLabel: '매우 혼잡',
@@ -61,7 +61,7 @@ export const LUNCH_RUSH_BANDS: RushBand[] = [
     start: H(11, 40),
     end: H(12, 0),
     emoji: '🟡',
-    status: 'MODERATE',
+    status: '보통',
     label: '조금 혼잡',
     detail: '줄은 있지만 금방 줄어들어요',
     crowdLabel: '혼잡',
@@ -74,7 +74,7 @@ export const LUNCH_RUSH_BANDS: RushBand[] = [
     start: H(12, 0),
     end: H(12, 30),
     emoji: '🟢',
-    status: 'ALMOST EMPTY',
+    status: '거의 한산',
     label: '거의 한산',
     detail: '기다리지 않고 바로 받을 수 있어요',
     crowdLabel: '한산',

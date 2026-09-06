@@ -68,7 +68,7 @@ export function LunchLineLive({ nowMinutes, compact = false, muted = false }: Lu
       <View style={styles.header}>
         <View style={styles.titleRow}>
           <Text style={styles.titleEmoji}>🍽️</Text>
-          <Text style={[text.subheading, styles.title]}>Lunch Line Live</Text>
+          <Text style={[text.subheading, styles.title]}>실시간 급식 줄</Text>
         </View>
         {isLive ? <LiveBadge /> : <EstimateChip />}
       </View>
@@ -363,7 +363,7 @@ function LiveBadge() {
       <Pulse duration={900} scaleTo={1.5} minOpacity={0.35}>
         <View style={[styles.liveDot, { backgroundColor: t.colors.danger }]} />
       </Pulse>
-      <Text style={[text.overline, { color: t.colors.danger }]}>LIVE</Text>
+      <Text style={[text.overline, { color: t.colors.danger }]}>실시간</Text>
     </View>
   );
 }
@@ -396,7 +396,7 @@ function LegendRow({ band, active }: { band: RushBand; active: boolean }) {
           <Text style={[text.overline, { color: bandTheme.color }]}>{band.status}</Text>
           {isBest ? (
             <View style={styles.bestChip}>
-              <Text style={[text.caption, styles.bestChipText]}>Best time to go</Text>
+              <Text style={[text.caption, styles.bestChipText]}>가기 좋은 시간</Text>
             </View>
           ) : null}
         </View>
