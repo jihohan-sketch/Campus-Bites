@@ -198,7 +198,12 @@ function ReportRow({
           trend rather than as a wall of text. */}
       <View style={[styles.reportStripe, { backgroundColor: step.color }]} />
 
-      <Avatar emoji={report.authorEmoji} size={40} ringColor={step.color} />
+      <Avatar
+        emoji={report.authorEmoji}
+        photoUrl={report.authorPhotoUrl}
+        size={40}
+        ringColor={step.color}
+      />
 
       <View style={styles.reportBody}>
         <View style={styles.reportTop}>

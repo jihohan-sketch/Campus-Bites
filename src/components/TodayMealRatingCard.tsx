@@ -148,7 +148,7 @@ export function TodayMealRatingCard({
         <View style={styles.reviews}>
           {preview.map((rating) => (
             <View key={rating.id} style={styles.reviewRow}>
-              <Avatar emoji={rating.authorEmoji} size={28} />
+              <Avatar emoji={rating.authorEmoji} photoUrl={rating.authorPhotoUrl} size={28} />
               <View style={styles.reviewBody}>
                 <View style={styles.reviewTop}>
                   <Text style={[text.label, styles.reviewName]} numberOfLines={1}>

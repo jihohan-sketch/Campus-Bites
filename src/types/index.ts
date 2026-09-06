@@ -71,6 +71,11 @@ export interface UserProfile {
   displayName: string;
   /** A single emoji used as a lightweight avatar. */
   emoji: string;
+  /**
+   * The Google account photo, when the student signed in that way. Empty for
+   * email accounts, and the emoji stands in — every avatar has a fallback.
+   */
+  photoUrl: string;
   school: School | null;
   grade: number | null;
   classNo: number | null;
@@ -96,6 +101,8 @@ export interface CrowdReport {
   authorUid: string;
   authorName: string;
   authorEmoji: string;
+  /** The author's profile photo at the time of the report; may be empty. */
+  authorPhotoUrl: string;
   createdAt: number;
 }
 
@@ -153,6 +160,8 @@ export interface MealRating {
   raterId: string;
   authorName: string;
   authorEmoji: string;
+  /** The rater's profile photo at the time of the rating; may be empty. */
+  authorPhotoUrl: string;
   createdAt: number;
 }
 

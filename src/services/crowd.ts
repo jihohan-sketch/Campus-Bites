@@ -39,6 +39,7 @@ function toCrowdReport(id: string, data: Record<string, unknown>): CrowdReport {
     authorUid: asString(data.authorUid),
     authorName: asString(data.authorName, '익명'),
     authorEmoji: asString(data.authorEmoji, '🍚'),
+    authorPhotoUrl: asString(data.authorPhotoUrl),
     createdAt: toMillis(data.createdAt),
   };
 }
@@ -91,6 +92,8 @@ export async function submitCrowdReport(
     authorUid: profile.uid,
     authorName: profile.displayName,
     authorEmoji: profile.emoji,
+    // Denormalised so the feed renders without a read per author.
+    authorPhotoUrl: profile.photoUrl,
     createdAt: serverTimestamp(),
   });
 }

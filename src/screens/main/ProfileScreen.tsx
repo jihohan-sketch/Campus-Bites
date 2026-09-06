@@ -121,6 +121,7 @@ export function ProfileScreen(_props: Props) {
           <View style={styles.header}>
             <Avatar
               emoji={profile?.emoji ?? '🍚'}
+              photoUrl={profile?.photoUrl}
               size={76}
               background={t.colors.brandSoft}
               ringColor={t.colors.brand}

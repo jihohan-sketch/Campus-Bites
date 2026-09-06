@@ -90,6 +90,7 @@ export function toUserProfile(uid: string, data: Record<string, unknown>): UserP
     email: asString(data.email),
     displayName: asString(data.displayName, '이름 없음'),
     emoji: asString(data.emoji, '🍚'),
+    photoUrl: asString(data.photoUrl),
     school: readSchool(data.school),
     grade: readOptionalInt(data.grade),
     classNo: readOptionalInt(data.classNo),
@@ -120,6 +121,13 @@ export async function ensureProfile(user: User, displayNameHint?: string): Promi
       await updateDoc(ref, { friendCode, updatedAt: serverTimestamp() });
       return { ...profile, friendCode };
     }
+    // The Google photo can appear (an email account later signs in with
+    // Google) or change, and attribution should not go stale.
+    const authPhoto = (user.photoURL ?? '').trim();
+    if (authPhoto && authPhoto !== profile.photoUrl) {
+      await updateDoc(ref, { photoUrl: authPhoto, updatedAt: serverTimestamp() });
+      return { ...profile, photoUrl: authPhoto };
+    }
     // Backfill VIS as the school for older profiles.
     if (!profile.school) {
       await updateDoc(ref, {
@@ -145,6 +153,7 @@ export async function ensureProfile(user: User, displayNameHint?: string): Promi
     email: user.email ?? '',
     displayName,
     emoji: '🍚',
+    photoUrl: (user.photoURL ?? '').trim(),
     school: APP_SCHOOL,
     grade: null,
     classNo: null,
@@ -157,6 +166,7 @@ export async function ensureProfile(user: User, displayNameHint?: string): Promi
     email: profile.email,
     displayName: profile.displayName,
     emoji: profile.emoji,
+    photoUrl: profile.photoUrl,
     school: APP_SCHOOL,
     schoolKey: APP_SCHOOL_KEY,
     grade: null,

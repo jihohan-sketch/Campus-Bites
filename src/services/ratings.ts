@@ -74,6 +74,7 @@ function toMealRating(id: string, data: Record<string, unknown>): MealRating {
     raterId: asString(data.raterId),
     authorName: asString(data.authorName, '익명'),
     authorEmoji: asString(data.authorEmoji, '🍚'),
+    authorPhotoUrl: asString(data.authorPhotoUrl),
     createdAt: toMillis(data.createdAt),
   };
 }
@@ -237,6 +238,8 @@ export async function submitMealRating(
     raterId: rater.raterId,
     authorName: rater.profile?.displayName ?? '익명',
     authorEmoji: rater.profile?.emoji ?? '🍚',
+    // Denormalised so a review renders without a second read per author.
+    authorPhotoUrl: rater.profile?.photoUrl ?? '',
     createdAt: Date.now(),
   };
 
@@ -258,6 +261,7 @@ export async function submitMealRating(
     raterId: rating.raterId,
     authorName: rating.authorName,
     authorEmoji: rating.authorEmoji,
+    authorPhotoUrl: rating.authorPhotoUrl,
     createdAt: serverTimestamp(),
   });
 

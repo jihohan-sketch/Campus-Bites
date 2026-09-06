@@ -271,7 +271,7 @@ export function MealRatingPanel({
         ) : (
           reviews.slice(0, 8).map((rating) => (
             <View key={rating.id} style={styles.reviewRow}>
-              <Avatar emoji={rating.authorEmoji} size={34} />
+              <Avatar emoji={rating.authorEmoji} photoUrl={rating.authorPhotoUrl} size={34} />
               <View style={styles.reviewBody}>
                 <View style={styles.reviewTop}>
                   <Text style={[text.bodyStrong, styles.reviewName]} numberOfLines={1}>
