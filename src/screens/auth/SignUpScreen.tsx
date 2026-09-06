@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -25,7 +25,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'SignUp'>;
 export function SignUpScreen({ navigation }: Props) {
   const t = useTheme();
   const styles = useStyles(makeStyles);
-  const { signUp, signInWithGoogle, googleAvailable } = useAuth();
+  const { user, signUp, signInWithGoogle, googleAvailable } = useAuth();
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,6 +34,16 @@ export function SignUpScreen({ navigation }: Props) {
   const [googleBusy, setGoogleBusy] = useState(false);
 
   const busy = submitting || googleBusy;
+
+  // The navigator does not branch on auth state: 급식표 is guest-first and this
+  // screen is a modal over it, so a successful sign-in changes nothing on its
+  // own. Without this the spinner keeps turning on a session that is already
+  // signed in, which reads as a hung app.
+  useEffect(() => {
+    if (!user) return;
+    if (navigation.canGoBack()) navigation.goBack();
+    else navigation.navigate('Main', { screen: 'Meals' });
+  }, [user, navigation]);
   const passwordTooShort = password.length > 0 && password.length < 6;
   // Flag the wrong domain while they type rather than after they hit 가입하기.
   const wrongDomain = email.trim().length > 0 && !isSchoolEmail(email);

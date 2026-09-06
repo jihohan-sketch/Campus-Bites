@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -25,7 +25,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'SignIn'>;
 export function SignInScreen({ navigation }: Props) {
   const t = useTheme();
   const styles = useStyles(makeStyles);
-  const { signIn, signInWithGoogle, firebaseEnabled, googleAvailable } = useAuth();
+  const { user, signIn, signInWithGoogle, firebaseEnabled, googleAvailable } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -35,13 +35,23 @@ export function SignInScreen({ navigation }: Props) {
   const busy = submitting || googleBusy;
   const canSubmit = email.trim().length > 0 && password.length > 0 && !busy;
 
+  // The navigator does not branch on auth state: 급식표 is guest-first and this
+  // screen is a modal over it, so a successful sign-in changes nothing on its
+  // own. Without this the spinner keeps turning on a session that is already
+  // signed in, which reads as a hung app.
+  useEffect(() => {
+    if (!user) return;
+    if (navigation.canGoBack()) navigation.goBack();
+    else navigation.navigate('Main', { screen: 'Meals' });
+  }, [user, navigation]);
+
   const handleGoogle = async () => {
     if (busy) return;
     setGoogleBusy(true);
     setError(null);
     try {
       await signInWithGoogle();
-      // On success the auth state swaps the navigator out from under us.
+      // The effect above dismisses this screen once the session lands.
     } catch (googleError) {
       setError(describeAuthError(googleError));
       setGoogleBusy(false);
@@ -54,7 +64,7 @@ export function SignInScreen({ navigation }: Props) {
     setError(null);
     try {
       await signIn(email, password);
-      // Navigation is driven by the auth state, so nothing to do on success.
+      // The effect above dismisses this screen once the session lands.
     } catch (signInError) {
       setError(describeAuthError(signInError));
     } finally {
