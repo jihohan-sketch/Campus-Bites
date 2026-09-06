@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { APP_SCHOOL, MENU_COVERAGE, isBeyondMenuCoverage, schoolKeyOf } from '../../config/school';
@@ -17,25 +17,19 @@ import { TodayMealRatingCard } from '../../components/TodayMealRatingCard';
 import { MealCardSkeleton } from '../../components/Skeleton';
 import { FadeIn, PressableScale } from '../../components/motion';
 import { useAuth } from '../../context/AuthContext';
+import { useSelectedDate } from '../../context/SelectedDateContext';
 import { useCrowd } from '../../hooks/useCrowd';
 import { useMeals } from '../../hooks/useMeals';
-import { useNow } from '../../hooks/useNow';
 import type { MainTabParamList, RootStackParamList } from '../../navigation/types';
 import { radius, space, type as text, useStyles, useTheme, type Theme } from '../../theme';
 import { MEAL_TYPES } from '../../types';
 import {
-  currentHourInKst,
-  daysBetween,
   formatKoreanDate,
   formatLongKoreanDate,
   fromYmd,
-  isSameDate,
   isWeekend,
-  todayInKst,
   toYmd,
-  type CivilDate,
 } from '../../utils/date';
-import { currentMealType } from '../../utils/meal';
 
 type Props = BottomTabScreenProps<MainTabParamList, 'Meals'>;
 
@@ -46,36 +40,22 @@ export function MealsScreen(_props: Props) {
 
   const { profile } = useAuth();
 
-  // A one minute tick keeps "오늘" and the NOW badge honest when the app is
-  // left open across a meal boundary or midnight.
-  const tick = useNow(60000);
-
-  const [date, setDate] = useState<CivilDate>(() => todayInKst());
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const today = useMemo(() => todayInKst(), [tick]);
-  const isToday = isSameDate(date, today);
+  // The browsed day is shared with 혼잡도, so the rating card on either tab
+  // always describes the menu the student is actually looking at.
+  const {
+    date,
+    setDate,
+    today,
+    isToday,
+    currentService,
+    highlightedMealType: highlightedMeal,
+    ratedMealType: ratedMeal,
+    isRatable,
+    goToToday,
+  } = useSelectedDate();
 
   const { meals, status, error, refreshing, refresh } = useMeals(date);
   const { summary, now } = useCrowd(isToday ? schoolKeyOf() : null, profile?.uid ?? null);
-
-  const highlightedMeal = useMemo(
-    () => (isToday ? currentMealType(currentHourInKst()) : null),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isToday, tick],
-  );
-
-  /** Whichever service is on right now, regardless of the day being browsed. */
-  const currentService = useMemo(
-    () => currentMealType(currentHourInKst()),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [tick],
-  );
-
-  // Today the card follows whichever service is on; on any other day lunch is
-  // the one students actually came to look up.
-  const ratedMeal = highlightedMeal ?? 'lunch';
-  // A meal that has not been served yet can be read but not scored.
-  const isRatable = daysBetween(today, date) <= 0;
 
   // The page takes its temperature from whichever service is on right now.
   const bloom = t.meal[highlightedMeal ?? currentService].soft;
@@ -161,7 +141,7 @@ export function MealsScreen(_props: Props) {
                   : '이 날은 급식 운영이 없는 날이에요.'
             }
             actionLabel="오늘로 이동"
-            onAction={() => setDate(todayInKst())}
+            onAction={goToToday}
           />
         ) : (
           <View style={styles.cards}>

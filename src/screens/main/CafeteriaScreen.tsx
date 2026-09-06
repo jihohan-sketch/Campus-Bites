@@ -18,15 +18,14 @@ import { Screen } from '../../components/Screen';
 import { RowSkeleton } from '../../components/Skeleton';
 import { FadeIn } from '../../components/motion';
 import { useAuth } from '../../context/AuthContext';
+import { useSelectedDate } from '../../context/SelectedDateContext';
 import { useCrowd } from '../../hooks/useCrowd';
 import { useMeals } from '../../hooks/useMeals';
-import { useNow } from '../../hooks/useNow';
 import type { MainTabParamList, RootStackParamList } from '../../navigation/types';
 import { CROWD_WINDOW_MS } from '../../services/crowd';
 import { radius, space, type as text, useStyles, useTheme, type Theme } from '../../theme';
 import type { CrowdReport } from '../../types';
-import { currentHourInKst, formatRelativeTime, todayInKst, toYmd } from '../../utils/date';
-import { currentMealType } from '../../utils/meal';
+import { formatKoreanDate, formatRelativeTime, toYmd } from '../../utils/date';
 
 type Props = BottomTabScreenProps<MainTabParamList, 'Cafeteria'>;
 
@@ -41,15 +40,13 @@ export function CafeteriaScreen(_props: Props) {
 
   const { reports, summary, loading, error, now } = useCrowd(schoolKey, uid);
 
-  // A one minute tick rolls the date and the rated service over on their own.
-  const tick = useNow(60000);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const today = useMemo(() => todayInKst(), [tick]);
-  const todayYmd = toYmd(today);
-  // Rate whichever service is happening around now, not always lunch.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const ratedMealType = useMemo(() => currentMealType(currentHourInKst()), [tick]);
-  const { meals } = useMeals(today);
+  // The rated day is the one the student picked over on 급식표, not the real
+  // calendar day: paging to Thursday's menu and then reading a rating card
+  // about Wednesday's lunch is the bug this shares state to avoid.
+  const { date, today, isToday, currentService, ratedMealType, isRatable, goToToday } =
+    useSelectedDate();
+  const dateYmd = toYmd(date);
+  const { meals } = useMeals(date);
 
   const { live, earlier } = useMemo(() => {
     const cutoff = now - CROWD_WINDOW_MS;
@@ -69,7 +66,7 @@ export function CafeteriaScreen(_props: Props) {
             </Text>
             <Text style={[text.hero, styles.title]}>급식실 현황</Text>
             <Text style={[text.body, styles.subtitle]}>
-              줄 서는 시간과 오늘 급식 평가를 한눈에
+              줄 서는 시간과 급식 평가를 한눈에
             </Text>
           </View>
         </FadeIn>
@@ -163,14 +160,17 @@ export function CafeteriaScreen(_props: Props) {
 
         <MealRatingPanel
           schoolKey={schoolKey}
-          date={todayYmd}
+          date={dateYmd}
           mealType={ratedMealType}
           meal={meals[ratedMealType]}
           profile={profile}
+          dayLabel={isToday ? '오늘의' : formatKoreanDate(date)}
+          ratable={isRatable}
+          onGoToToday={isToday ? undefined : goToToday}
           onRequestSignIn={() => navigation.navigate('SignIn')}
         />
 
-        <PastMealRatings schoolKey={schoolKey} today={today} mealType={ratedMealType} uid={uid} />
+        <PastMealRatings schoolKey={schoolKey} today={today} mealType={currentService} uid={uid} />
       </ScrollView>
     </Screen>
   );

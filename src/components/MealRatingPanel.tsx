@@ -25,13 +25,23 @@ interface MealRatingPanelProps {
   mealType: MealType;
   meal: Meal | null;
   profile: UserProfile | null;
+  /**
+   * How to name {@link date} in the panel's own copy — `오늘의`, or
+   * `9월 3일 (목)` when the student has paged 급식표 to another day. The panel
+   * follows the menu on screen, so it must never call another day "오늘".
+   */
+  dayLabel?: string;
+  /** False for a service that has not been served yet — the panel reads only. */
+  ratable?: boolean;
+  /** Offered when a past or future day is on screen, to jump back to today. */
+  onGoToToday?: () => void;
   /** Sends a signed-out student to the sign-in screen; they can still read. */
   onRequestSignIn?: () => void;
 }
 
 /**
- * The student verdict on today's meal: one score, one optional line, and the
- * running average everyone else has landed on.
+ * The student verdict on the meal being browsed: one score, one optional line,
+ * and the running average everyone else has landed on.
  */
 export function MealRatingPanel({
   schoolKey,
@@ -39,6 +49,9 @@ export function MealRatingPanel({
   mealType,
   meal,
   profile,
+  dayLabel = '오늘의',
+  ratable = true,
+  onGoToToday,
   onRequestSignIn,
 }: MealRatingPanelProps) {
   const t = useTheme();
@@ -91,7 +104,7 @@ export function MealRatingPanel({
       <View style={styles.header}>
         <View style={styles.titleRow}>
           <Text style={styles.titleEmoji}>🍱</Text>
-          <Text style={[text.subheading, styles.title]}>오늘의 급식 평가</Text>
+          <Text style={[text.subheading, styles.title]}>{dayLabel} 급식 평가</Text>
         </View>
         <View style={styles.headerChips}>
           {localOnly ? <Pill label="이 기기에만 저장" /> : null}
@@ -112,7 +125,9 @@ export function MealRatingPanel({
           ) : null}
         </View>
       ) : (
-        <Text style={[text.caption, styles.menuMore]}>오늘 {theme.label} 메뉴가 없어요</Text>
+        <Text style={[text.caption, styles.menuMore]}>
+          {dayLabel} {theme.label} 메뉴가 없어요
+        </Text>
       )}
 
       <ScoreBlock summary={summary} loading={loading} celebrate={justSubmitted} />
@@ -206,15 +221,29 @@ export function MealRatingPanel({
           {mine.comment ? <Text style={[text.body, styles.mineComment]}>{mine.comment}</Text> : null}
           <Text style={[text.caption, styles.mineHint]}>한 급식당 한 번만 평가할 수 있어요</Text>
         </View>
+      ) : !ratable ? (
+        // A future service can be read but not scored, the same rule the card
+        // on 급식표 follows.
+        <View style={styles.signInCta}>
+          <Text style={[text.caption, styles.signInHint]}>아직 평가할 수 없는 급식이에요</Text>
+          {onGoToToday ? (
+            <Button label="오늘로 이동" variant="secondary" onPress={onGoToToday} fullWidth />
+          ) : null}
+        </View>
       ) : canRate ? (
-        <Button
-          label="오늘 급식 평가하기"
-          onPress={() => toggleComposer(true)}
-          size="lg"
-          fullWidth
-          tint={theme.tint}
-          leading={<Ionicons name="star" size={17} color={t.colors.onAccent} />}
-        />
+        <View style={styles.signInCta}>
+          <Button
+            label={`${dayLabel} 급식 평가하기`}
+            onPress={() => toggleComposer(true)}
+            size="lg"
+            fullWidth
+            tint={theme.tint}
+            leading={<Ionicons name="star" size={17} color={t.colors.onAccent} />}
+          />
+          {onGoToToday ? (
+            <Button label="오늘로 이동" variant="ghost" onPress={onGoToToday} fullWidth />
+          ) : null}
+        </View>
       ) : (
         // Reading is open to everyone; only the write needs an account, so the
         // score and the feed above stay visible behind this.
