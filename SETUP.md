@@ -19,6 +19,18 @@
 - **이메일/비밀번호**
 - **Google** — 프로젝트 지원 이메일만 고르면 끝
 
+### 구글 계정을 학교 도메인으로 제한하기
+
+Firebase의 Google 제공업체는 그 자체로 도메인을 막지 못합니다. 제한은 두 겹입니다:
+
+1. **앱** — `signInWithGoogle()`이 `hd=valorschool.org`를 넘겨 구글 계정 선택창이
+   학교 계정을 먼저 보여주고, 다른 도메인으로 들어오면 즉시 로그아웃시킵니다.
+   (`src/context/AuthContext.tsx`)
+2. **서버** — `firestore.rules`의 `schoolMember()`가 `@valorschool.org` 이메일이
+   아닌 요청의 쓰기를 전부 거부합니다. **이쪽이 실제 차단입니다.**
+
+1번만 있으면 우회할 수 있으므로 6번(규칙 배포)을 반드시 하세요.
+
 ## 3. 승인된 도메인 등록
 
 **Authentication → Settings → 승인된 도메인** → 배포 주소 추가
@@ -50,14 +62,25 @@ Vercel: **Settings → Environment Variables**에 같은 6개를 등록하고 **
 `EXPO_PUBLIC_*`는 빌드할 때 코드에 박히는 값이라, 등록만 하고 재배포하지 않으면
 바뀌지 않습니다.
 
-| .env 키 | firebaseConfig 필드 |
-| --- | --- |
-| `EXPO_PUBLIC_FIREBASE_API_KEY` | `apiKey` |
-| `EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN` | `authDomain` |
-| `EXPO_PUBLIC_FIREBASE_PROJECT_ID` | `projectId` |
-| `EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET` | `storageBucket` |
-| `EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | `messagingSenderId` |
-| `EXPO_PUBLIC_FIREBASE_APP_ID` | `appId` |
+이 여섯 개가 **환경변수의 전부입니다.** 다른 비밀값은 없습니다.
+
+| .env / Vercel 키 | firebaseConfig 필드 | 필수 |
+| --- | --- | --- |
+| `EXPO_PUBLIC_FIREBASE_API_KEY` | `apiKey` | ✅ |
+| `EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN` | `authDomain` | ✅ |
+| `EXPO_PUBLIC_FIREBASE_PROJECT_ID` | `projectId` | ✅ |
+| `EXPO_PUBLIC_FIREBASE_APP_ID` | `appId` | ✅ |
+| `EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET` | `storageBucket` | 선택 |
+| `EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | `messagingSenderId` | 선택 |
+
+Vercel에서는 **Production / Preview / Development 세 환경 모두** 체크하세요.
+
+> `EXPO_PUBLIC_*` 값은 번들에 그대로 박히고 브라우저에서 읽을 수 있습니다.
+> 이는 Firebase 웹 앱의 정상 동작입니다 — `apiKey`는 비밀번호가 아니라 프로젝트
+> 식별자이고, 실제 접근 통제는 전부 `firestore.rules`가 합니다. 그래서 6번을
+> 건너뛰면 안 됩니다.
+>
+> `.env`는 `.gitignore`에 있으므로 커밋되지 않습니다.
 
 ## 6. 보안 규칙 · 인덱스 배포
 
@@ -80,6 +103,10 @@ npx firebase deploy --only firestore:rules,firestore:indexes
    있어요"가 뜨면 도메인 제한이 살아 있는 것
 3. 급식실 현황 탭에서 별점 남기기 → 로그아웃해도 점수와 후기가 그대로 보이면
    공개 읽기가 동작하는 것
+4. 구글 계정으로 로그인했다면 후기·제보 옆에 프로필 사진이 뜨는지 확인
+   (이메일 계정은 이모지 아바타로 남습니다)
+5. 같은 급식에 두 번 평가 → 새 평가가 추가되지 않고 기존 평가가 수정되면
+   1인 1표가 동작하는 것
 
 ## 알아둘 것
 
