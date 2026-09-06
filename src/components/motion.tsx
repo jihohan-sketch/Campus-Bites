@@ -155,15 +155,30 @@ export function FadeIn({
   const progress = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    const delay = index * motion.stagger;
     const animation = Animated.timing(progress, {
       toValue: 1,
       duration,
-      delay: index * motion.stagger,
+      delay,
       easing: Easing.bezier(0.22, 1, 0.36, 1),
       useNativeDriver: USE_NATIVE_DRIVER,
     });
     animation.start();
-    return () => animation.stop();
+
+    // Safety net. This entrance starts at `opacity: 0`, and on web the JS
+    // driver only advances while `requestAnimationFrame` fires — a tab opened
+    // in the background, a throttled or low-power renderer, or a stalled frame
+    // loop would otherwise leave every screen at zero opacity for as long as
+    // that lasts. The content is in the DOM and the layout is correct, so it
+    // reads as a permanently blank app rather than as a missing animation.
+    // Timers keep firing where frames do not, so settle the value outright
+    // once the entrance was due to have finished.
+    const settle = setTimeout(() => progress.setValue(1), delay + duration + 400);
+
+    return () => {
+      animation.stop();
+      clearTimeout(settle);
+    };
   }, [progress, index, duration]);
 
   return (
