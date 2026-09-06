@@ -28,6 +28,8 @@ export const radius = {
   md: 16,
   lg: 20,
   xl: 26,
+  /** Hero cards and photo panels — the biggest corner in the app. */
+  hero: 30,
   xxl: 34,
   pill: 999,
 } as const;
@@ -86,6 +88,12 @@ export interface Palette {
   track: string;
 
   overlay: string;
+  /**
+   * Laid over a photo so white type stays legible on top of it. Three stops —
+   * clear at the top, then a fast ramp — so the image is barely touched where
+   * nothing sits on it and genuinely dark where the text does.
+   */
+  scrim: readonly [string, string, string];
   white: string;
   /** Shadow colour; a much heavier black in dark mode reads as depth. */
   shadowColor: string;
@@ -133,6 +141,7 @@ const light: Palette = {
   track: 'rgba(17, 17, 24, 0.10)',
 
   overlay: 'rgba(12, 12, 18, 0.42)',
+  scrim: ['rgba(8,8,14,0)', 'rgba(8,8,14,0.30)', 'rgba(8,8,14,0.86)'],
   white: '#FFFFFF',
   shadowColor: '#0D0D18',
   shadowOpacity: { sm: 0.05, md: 0.09, lg: 0.16 },
@@ -179,6 +188,7 @@ const dark: Palette = {
   track: 'rgba(255, 255, 255, 0.12)',
 
   overlay: 'rgba(0, 0, 0, 0.62)',
+  scrim: ['rgba(0,0,0,0)', 'rgba(0,0,0,0.36)', 'rgba(0,0,0,0.90)'],
   white: '#FFFFFF',
   shadowColor: '#000000',
   shadowOpacity: { sm: 0.3, md: 0.45, lg: 0.6 },
@@ -188,7 +198,7 @@ export const palettes: Record<Scheme, Palette> = { light, dark };
 
 /* ----------------------------------------------------------------- shadow */
 
-export type ShadowStep = 'xs' | 'sm' | 'md' | 'lg';
+export type ShadowStep = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
 /**
  * Soft, wide, low-opacity shadows — the difference between "card" and
@@ -220,6 +230,7 @@ export function buildShadows(palette: Palette): Record<ShadowStep, ViewStyle> {
     sm: step(o.sm, 14, 4, 2),
     md: step(o.md, 26, 10, 6),
     lg: step(o.lg, 44, 20, 14),
+    xl: step(o.lg * 1.15, 64, 28, 20),
   };
 }
 
@@ -290,7 +301,10 @@ export const type: Record<TypeToken, TextStyle> = {
 /* ------------------------------------------------------------ meal themes */
 
 export interface MealTheme {
+  /** English name — the primary label on the meal tabs. */
   label: string;
+  /** Korean name, set under the English one. */
+  korean: string;
   /** Shown on the card header. */
   emoji: string;
   /** Header gradient — two stops, same hue family, never a rainbow. */
@@ -310,6 +324,11 @@ export interface MealTheme {
   inkWashBorder: string;
   /** Typical serving window, shown on the card. */
   window: string;
+  /**
+   * Laid over the hero photograph. Tinted towards the meal's own hue rather
+   * than neutral black, so a photo still reads as belonging to this service.
+   */
+  scrim: readonly [string, string, string];
 }
 
 const WHITE_INK = {
@@ -320,13 +339,14 @@ const WHITE_INK = {
 } as const;
 
 /**
- * 조식 warm yellow · 중식 orange · 석식 indigo-violet, so a student can tell
- * which service they are looking at from across the room.
+ * Breakfast warm yellow · Lunch orange · Dinner indigo-violet, so a student can
+ * tell which service they are looking at from across the room.
  */
 export const mealThemes: Record<Scheme, Record<MealType, MealTheme>> = {
   light: {
     breakfast: {
-      label: '조식',
+      label: 'Breakfast',
+      korean: '아침',
       emoji: '🌅',
       gradient: ['#FFC960', '#F0942A'],
       tint: '#B4740A',
@@ -336,29 +356,35 @@ export const mealThemes: Record<Scheme, Record<MealType, MealTheme>> = {
       inkWash: 'rgba(255,255,255,0.4)',
       inkWashBorder: 'rgba(255,255,255,0.7)',
       window: '07:30 – 08:20',
+      scrim: ['rgba(46,28,3,0)', 'rgba(46,28,3,0.42)', 'rgba(28,17,1,0.95)'],
     },
     lunch: {
-      label: '중식',
+      label: 'Lunch',
+      korean: '점심',
       emoji: '🍚',
       gradient: ['#FB7A45', '#E8451F'],
       tint: '#D3491D',
       soft: '#FFECE3',
       ...WHITE_INK,
       window: '11:30 – 12:30',
+      scrim: ['rgba(52,16,5,0)', 'rgba(52,16,5,0.44)', 'rgba(30,8,2,0.95)'],
     },
     dinner: {
-      label: '석식',
+      label: 'Dinner',
+      korean: '저녁',
       emoji: '🌙',
       gradient: ['#7A69EE', '#4A38BF'],
       tint: '#5340C9',
       soft: '#EFECFE',
       ...WHITE_INK,
       window: '18:00 – 18:50',
+      scrim: ['rgba(20,13,50,0)', 'rgba(20,13,50,0.46)', 'rgba(11,6,34,0.95)'],
     },
   },
   dark: {
     breakfast: {
-      label: '조식',
+      label: 'Breakfast',
+      korean: '아침',
       emoji: '🌅',
       gradient: ['#E0A93C', '#BC7C24'],
       tint: '#FFC960',
@@ -368,27 +394,50 @@ export const mealThemes: Record<Scheme, Record<MealType, MealTheme>> = {
       inkWash: 'rgba(255,255,255,0.28)',
       inkWashBorder: 'rgba(255,255,255,0.5)',
       window: '07:30 – 08:20',
+      scrim: ['rgba(46,28,3,0)', 'rgba(46,28,3,0.42)', 'rgba(28,17,1,0.95)'],
     },
     lunch: {
-      label: '중식',
+      label: 'Lunch',
+      korean: '점심',
       emoji: '🍚',
       gradient: ['#E8703F', '#C13C1B'],
       tint: '#FF9159',
       soft: 'rgba(255, 145, 89, 0.15)',
       ...WHITE_INK,
       window: '11:30 – 12:30',
+      scrim: ['rgba(52,16,5,0)', 'rgba(52,16,5,0.44)', 'rgba(30,8,2,0.95)'],
     },
     dinner: {
-      label: '석식',
+      label: 'Dinner',
+      korean: '저녁',
       emoji: '🌙',
       gradient: ['#7565E0', '#4536AB'],
       tint: '#A99BFF',
       soft: 'rgba(169, 155, 255, 0.16)',
       ...WHITE_INK,
       window: '18:00 – 18:50',
+      scrim: ['rgba(20,13,50,0)', 'rgba(20,13,50,0.46)', 'rgba(11,6,34,0.95)'],
     },
   },
 };
+
+/* -------------------------------------------------------------- on photo */
+
+/**
+ * Chips and badges laid over a photograph. These are the same in both schemes
+ * — a photo is a photo — and they are deliberately *dark*, because the meal
+ * themes' own `inkWash` is white and disappears against the white plate every
+ * dish in this app is shot on.
+ */
+export const onPhoto = {
+  wash: 'rgba(10, 10, 16, 0.40)',
+  washBorder: 'rgba(255, 255, 255, 0.28)',
+  ink: '#FFFFFF',
+  inkMuted: 'rgba(255, 255, 255, 0.84)',
+  /** A live badge has to win against any photo, so it inverts instead. */
+  liveFill: 'rgba(255, 255, 255, 0.95)',
+  liveInk: '#1A1A22',
+} as const;
 
 /* ----------------------------------------------------------- crowd themes */
 

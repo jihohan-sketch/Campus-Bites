@@ -31,7 +31,9 @@ interface ButtonProps {
   style?: StyleProp<ViewStyle>;
 }
 
-const HEIGHTS: Record<ButtonSize, number> = { sm: 38, md: 48, lg: 56 };
+const HEIGHTS: Record<ButtonSize, number> = { sm: 38, md: 50, lg: 56 };
+/** Corners scale with the button, so nothing reads as a boxy web form field. */
+const CORNERS: Record<ButtonSize, number> = { sm: radius.sm, md: radius.lg, lg: radius.xl };
 const LABEL: Record<ButtonSize, TextStyle> = {
   sm: { fontSize: 13 },
   md: { fontSize: 15 },
@@ -80,7 +82,7 @@ export function Button({
       dim={!isFilled}
       style={[
         styles.base,
-        { height: HEIGHTS[size], backgroundColor: look.background },
+        { height: HEIGHTS[size], borderRadius: CORNERS[size], backgroundColor: look.background },
         look.border ? { borderWidth: StyleSheet.hairlineWidth, borderColor: look.border } : null,
         isFilled && !isDisabled ? theme.shadow.sm : null,
         fullWidth ? styles.fullWidth : null,
@@ -117,7 +119,6 @@ export function Button({
 const makeStyles = (_t: Theme) =>
   StyleSheet.create({
     base: {
-      borderRadius: radius.md,
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: space(5),

@@ -8,6 +8,7 @@
 
 export {
   motion,
+  onPhoto,
   radius,
   space,
   type,

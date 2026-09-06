@@ -23,7 +23,7 @@ import type { RootStackParamList } from './types';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 /**
- * Guest-first navigation: 급식표 opens immediately with no login or setup.
+ * Guest-first navigation: the menu opens immediately with no login or setup.
  * Sign-in is optional and only needed for crowd reports, friends, and radar.
  */
 export function RootNavigator() {

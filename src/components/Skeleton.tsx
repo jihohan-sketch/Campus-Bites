@@ -105,28 +105,26 @@ export function Skeleton({ width = '100%', height = 14, round, style }: Skeleton
 }
 
 /**
- * Placeholder shaped like a loaded meal card, header band and all — the point
- * of a skeleton is that the real content lands where the grey was.
+ * Placeholder shaped like a loaded meal card — hero photo, then the tray list.
+ * The point of a skeleton is that the real content lands where the grey was,
+ * so this carries the same big block at the top that the card does.
  */
 export function MealCardSkeleton({ index = 0 }: { index?: number }) {
   const styles = useStyles(makeStyles);
 
   return (
     <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <Skeleton width={40} height={40} round={14} />
-        <View style={styles.cardHeaderText}>
-          <Skeleton width={72} height={16} />
-          <Skeleton width={96} height={11} />
-        </View>
-        <Skeleton width={58} height={22} />
-      </View>
+      <Skeleton width="100%" height={210} round={0} />
 
-      <View style={styles.lines}>
-        {[92, 74, 84, 62].map((width, line) => (
+      <View style={styles.cardBody}>
+        <Skeleton width={86} height={11} />
+        {[92, 74, 84].map((width, line) => (
           <View key={width} style={styles.line}>
-            <Skeleton width={22} height={22} round={8} />
-            <Skeleton width={`${width - index * 2 - line}%`} height={13} />
+            <Skeleton width={56} height={56} round={radius.md} />
+            <View style={styles.lineText}>
+              <Skeleton width={`${width - index * 2 - line * 6}%`} height={14} />
+              <Skeleton width={`${width - 28 - line * 4}%`} height={11} />
+            </View>
           </View>
         ))}
       </View>
@@ -158,16 +156,14 @@ const makeStyles = (t: Theme) =>
     sheen: { opacity: t.isDark ? 0.18 : 0.75 },
     card: {
       backgroundColor: t.colors.surface,
-      borderRadius: radius.xl,
+      borderRadius: radius.hero,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: t.colors.border,
-      padding: space(4.5),
-      gap: space(5),
+      overflow: 'hidden',
     },
-    cardHeader: { flexDirection: 'row', alignItems: 'center', gap: space(3) },
-    cardHeaderText: { flex: 1, gap: space(2) },
-    lines: { gap: space(3) },
-    line: { flexDirection: 'row', alignItems: 'center', gap: space(3) },
+    cardBody: { padding: space(4.5), gap: space(3.5) },
+    line: { flexDirection: 'row', alignItems: 'center', gap: space(3.5) },
+    lineText: { flex: 1, gap: space(2) },
     row: { flexDirection: 'row', alignItems: 'center', gap: space(3), paddingVertical: space(2) },
     rowText: { flex: 1, gap: space(2) },
   });

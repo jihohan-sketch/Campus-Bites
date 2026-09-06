@@ -2,7 +2,7 @@
  * Shared domain types for the school meal app.
  */
 
-/** The three meal services published by NEIS (조식 / 중식 / 석식). */
+/** The three meal services published by NEIS (breakfast / lunch / dinner). */
 export type MealType = 'breakfast' | 'lunch' | 'dinner';
 
 /** NEIS `MMEAL_SC_CODE` values mapped to our internal meal types. */

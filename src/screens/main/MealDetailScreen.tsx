@@ -1,25 +1,27 @@
+import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useMemo } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { Card } from '../../components/Card';
 import { Pill } from '../../components/Pill';
-import { Screen } from '../../components/Screen';
+import { CONTENT_MAX_WIDTH, Screen } from '../../components/Screen';
 import { FadeIn } from '../../components/motion';
 import { MENU_DISCLAIMER } from '../../config/school';
 import type { RootStackParamList } from '../../navigation/types';
 import {
+  onPhoto,
   radius,
   space,
   type as text,
   useStyles,
   useTheme,
-  type MealTheme,
   type Theme,
 } from '../../theme';
+import { DishImage } from '../../components/DishImage';
 import { fromYmd, formatLongKoreanDate } from '../../utils/date';
-import { foodEmoji } from '../../utils/foodIcon';
+import { headlineDish } from '../../utils/foodIcon';
 import { allergenLabel, collectAllergens } from '../../utils/meal';
 import { englishDishName } from '../../utils/dishEnglish';
 
@@ -31,64 +33,89 @@ export function MealDetailScreen({ route }: Props) {
   const styles = useStyles(makeStyles);
 
   const theme = t.meal[meal.type];
+  const { width } = useWindowDimensions();
   const civilDate = useMemo(() => fromYmd(meal.date), [meal.date]);
   const allergens = useMemo(() => collectAllergens(meal.dishes), [meal.dishes]);
+  const headline = useMemo(() => headlineDish(meal.dishes), [meal.dishes]);
+  // The hero is the one picture on the page worth looking at properly, so it
+  // takes the full width of the column and as much height as the window can
+  // spare rather than sitting in a fixed thumbnail.
+  const heroHeight = Math.round(
+    Math.max(230, Math.min(330, Math.min(width, CONTENT_MAX_WIDTH) * 0.72)),
+  );
 
   return (
     <Screen topInset={false}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <LinearGradient
-          colors={theme.gradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.hero}
-        >
+        <View style={[styles.hero, { height: heroHeight }]}>
+          {headline ? (
+            <View style={StyleSheet.absoluteFill} pointerEvents="none">
+              <DishImage
+                name={headline.name}
+                width="100%"
+                height={heroHeight}
+                tint={theme.soft}
+                round={0}
+              />
+            </View>
+          ) : (
+            <LinearGradient
+              colors={theme.gradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+          )}
+
           <LinearGradient
-            colors={['rgba(255,255,255,0.22)', 'rgba(255,255,255,0)']}
-            start={{ x: 0, y: 0 }}
+            colors={theme.scrim}
+            locations={[0, 0.4, 1]}
+            start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 1 }}
             style={StyleSheet.absoluteFill}
             pointerEvents="none"
           />
 
-          <View
-            style={[
-              styles.heroBadge,
-              { backgroundColor: theme.inkWash, borderColor: theme.inkWashBorder },
-            ]}
-          >
-            <Text style={styles.heroEmoji}>{theme.emoji}</Text>
-          </View>
-          <Text style={[text.display, { color: theme.ink }]}>{theme.label}</Text>
-          <Text style={[text.caption, { color: theme.inkMuted }]}>
-            {civilDate ? formatLongKoreanDate(civilDate) : meal.date} · {theme.window}
-          </Text>
+          <View style={styles.heroBody}>
+            <View style={styles.serviceChip}>
+              <Text style={styles.serviceEmoji}>{theme.emoji}</Text>
+              <Text style={[text.overline, styles.onPhoto]}>{theme.korean}</Text>
+            </View>
 
-          <View style={styles.heroStats}>
-            {meal.calories !== null ? (
-              <HeroStat label="열량" value={`${Math.round(meal.calories)} kcal`} theme={theme} />
-            ) : null}
-            {meal.headcount !== null ? (
-              <HeroStat
-                label="식수 인원"
-                value={`${meal.headcount.toLocaleString('ko-KR')}명`}
-                theme={theme}
-              />
-            ) : null}
-            <HeroStat label="메뉴" value={`${meal.dishes.length}가지`} theme={theme} />
-          </View>
-        </LinearGradient>
+            {/* The service is named in English everywhere in the app — the tab
+                that got the student here, the chip on the card — so the title
+                here is the same word, with the Korean on the chip above it. */}
+            <Text style={[text.display, styles.heroTitle]}>{theme.label}</Text>
+            <Text style={[text.caption, styles.heroSubtitle]}>
+              {civilDate ? formatLongKoreanDate(civilDate) : meal.date} · {theme.window}
+            </Text>
 
-        <Section title="오늘의 메뉴" index={0}>
+            <View style={styles.heroStats}>
+              {meal.calories !== null ? (
+                <HeroStat
+                  icon="flame-outline"
+                  label={`${Math.round(meal.calories)} kcal`}
+                />
+              ) : null}
+              {meal.headcount !== null ? (
+                <HeroStat
+                  icon="people-outline"
+                  label={`${meal.headcount.toLocaleString('ko-KR')}명`}
+                />
+              ) : null}
+              <HeroStat icon="restaurant-outline" label={`메뉴 ${meal.dishes.length}가지`} />
+            </View>
+          </View>
+        </View>
+
+        <Section title="오늘 나오는 메뉴" index={0}>
           <Card padded={false}>
             {meal.dishes.map((dish, index) => (
               <View
                 key={`${dish.name}-${index}`}
                 style={[styles.dishRow, index > 0 ? styles.dishRowDivided : null]}
               >
-                <View style={[styles.dishIcon, { backgroundColor: theme.soft }]}>
-                  <Text style={styles.dishEmoji}>{foodEmoji(dish.name)}</Text>
-                </View>
+                <DishImage name={dish.name} size={64} tint={theme.soft} round={radius.md} />
                 <View style={styles.dishText}>
                   <Text style={[text.bodyStrong, styles.dishName]}>{dish.name}</Text>
                   {englishDishName(dish.name) ? (
@@ -115,7 +142,7 @@ export function MealDetailScreen({ route }: Props) {
         </Section>
 
         {allergens.length > 0 ? (
-          <Section title="이 식사에 포함된 알레르기 유발 식품" index={1}>
+          <Section title="알레르기 유발 식품" index={1}>
             <View style={styles.allergenWrap}>
               {allergens.map((code) => (
                 <Pill key={code} label={`${code}. ${allergenLabel(code)}`} />
@@ -158,21 +185,14 @@ export function MealDetailScreen({ route }: Props) {
   );
 }
 
-function HeroStat({
-  label,
-  value,
-  theme,
-}: {
-  label: string;
-  value: string;
-  theme: MealTheme;
-}) {
+/** One frosted stat on the hero scrim — calories, headcount, dish count. */
+function HeroStat({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label: string }) {
   const styles = useStyles(makeStyles);
 
   return (
     <View style={styles.heroStat}>
-      <Text style={[text.overline, { color: theme.inkMuted }]}>{label}</Text>
-      <Text style={[text.bodyStrong, styles.tabular, { color: theme.ink }]}>{value}</Text>
+      <Ionicons name={icon} size={13} color={onPhoto.ink} />
+      <Text style={[text.caption, styles.heroStatLabel]}>{label}</Text>
     </View>
   );
 }
@@ -216,47 +236,60 @@ const makeStyles = (t: Theme) =>
     content: { paddingBottom: space(14), gap: space(5) },
 
     hero: {
-      paddingHorizontal: space(6),
-      paddingTop: space(7),
-      paddingBottom: space(7),
-      gap: space(1),
+      justifyContent: 'flex-end',
       borderBottomLeftRadius: radius.xxl,
       borderBottomRightRadius: radius.xxl,
       overflow: 'hidden',
     },
-    heroBadge: {
-      width: 58,
-      height: 58,
-      borderRadius: radius.lg,
+    heroBody: { paddingHorizontal: space(5.5), paddingBottom: space(5.5), gap: space(1) },
+    serviceChip: {
+      flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'center',
+      alignSelf: 'flex-start',
+      gap: space(1.5),
+      paddingHorizontal: space(2.5),
+      paddingVertical: space(1.5),
+      borderRadius: radius.pill,
+      backgroundColor: onPhoto.wash,
       borderWidth: StyleSheet.hairlineWidth,
+      borderColor: onPhoto.washBorder,
       marginBottom: space(2),
     },
-    heroEmoji: { fontSize: 30 },
-    tabular: { fontVariant: ['tabular-nums'] },
-    heroStats: { flexDirection: 'row', gap: space(7), marginTop: space(5) },
-    heroStat: { gap: space(1) },
+    serviceEmoji: { fontSize: 13 },
+    onPhoto: { color: onPhoto.ink },
+    heroTitle: {
+      color: onPhoto.ink,
+      textShadowColor: 'rgba(0,0,0,0.35)',
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 8,
+    },
+    heroSubtitle: { color: onPhoto.inkMuted },
+
+    heroStats: { flexDirection: 'row', flexWrap: 'wrap', gap: space(2), marginTop: space(3.5) },
+    heroStat: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: space(1.5),
+      paddingHorizontal: space(3),
+      paddingVertical: space(1.5),
+      borderRadius: radius.pill,
+      backgroundColor: onPhoto.wash,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: onPhoto.washBorder,
+    },
+    heroStatLabel: { color: onPhoto.ink, fontWeight: '700', fontVariant: ['tabular-nums'] },
 
     section: { paddingHorizontal: space(5), gap: space(2.5) },
-    sectionTitle: { color: t.colors.textSecondary },
+    sectionTitle: { color: t.colors.textSecondary, paddingLeft: space(0.5) },
 
     dishRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: space(3),
+      gap: space(3.5),
       paddingVertical: space(3.5),
       paddingHorizontal: space(4.5),
     },
     dishRowDivided: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.colors.divider },
-    dishIcon: {
-      width: 34,
-      height: 34,
-      borderRadius: radius.xs,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    dishEmoji: { fontSize: 17 },
     dishText: { flex: 1, gap: space(1.5) },
     dishName: { color: t.colors.text },
     dishNameEn: { color: t.colors.textSecondary },

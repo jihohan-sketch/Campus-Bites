@@ -89,7 +89,7 @@ export function TodayMealRatingCard({
       <View style={styles.header}>
         <View style={styles.titleRow}>
           <Text style={styles.titleEmoji}>🍱</Text>
-          <Text style={[text.subheading, styles.title]}>오늘의 급식 평가</Text>
+          <Text style={[text.subheading, styles.title]}>오늘 메뉴 어땠어?</Text>
         </View>
         {localOnly ? (
           <Pill label="이 기기에만 저장" />
@@ -122,10 +122,10 @@ export function TodayMealRatingCard({
           onEdit={() => setComposerOpen(true)}
         />
       ) : !ratable ? (
-        <Text style={[text.caption, styles.notYet]}>아직 평가할 수 없는 급식이에요</Text>
+        <Text style={[text.caption, styles.notYet]}>아직 먹기 전이라 평가할 수 없어요</Text>
       ) : canRate ? (
         <Button
-          label="오늘 급식 평가하기"
+          label="평가 남기기"
           onPress={() => setComposerOpen(true)}
           size="lg"
           fullWidth

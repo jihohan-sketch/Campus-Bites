@@ -63,7 +63,7 @@ export function ProfileScreen(_props: Props) {
             <Card padded={false}>
               <Row
                 icon="restaurant-outline"
-                label="급식표"
+                label="메뉴"
                 value="바로 보기"
                 onPress={() => navigation.navigate('Main', { screen: 'Meals' })}
               />
@@ -104,7 +104,7 @@ export function ProfileScreen(_props: Props) {
             <View style={styles.about}>
               <Text style={[text.overline, styles.aboutTitle]}>준비 중인 기능</Text>
               <Text style={[text.caption, styles.aboutText]}>
-                혼잡도 제보와 친구 기능은 서버 연결 후 열려요. 급식표와 예상 혼잡도, 급식
+                혼잡도 제보와 친구 기능은 서버 연결 후 열려요. 메뉴와 예상 혼잡도, 메뉴
                 평가는 지금 바로 쓸 수 있어요.
               </Text>
             </View>
@@ -196,7 +196,7 @@ export function ProfileScreen(_props: Props) {
         </FadeIn>
 
         <View style={styles.about}>
-          <Text style={[text.overline, styles.aboutTitle]}>급식 정보</Text>
+          <Text style={[text.overline, styles.aboutTitle]}>메뉴 정보</Text>
           <Text style={[text.caption, styles.aboutText]}>
             {APP_SCHOOL.schoolName} 식단표를 그대로 옮겨 싣습니다. 새 식단표가 등록되면 앱을
             업데이트하지 않아도 바로 반영돼요.

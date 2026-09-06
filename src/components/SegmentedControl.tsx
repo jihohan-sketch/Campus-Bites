@@ -26,7 +26,7 @@ interface SegmentedControlProps<T extends string> {
   style?: StyleProp<ViewStyle>;
 }
 
-const PADDING = space(1);
+const PADDING = space(1.25);
 
 /**
  * iOS-style segmented switch. The selected pill slides between segments rather
@@ -93,7 +93,7 @@ const makeStyles = (t: Theme) =>
     track: {
       flexDirection: 'row',
       backgroundColor: t.colors.surfaceSunken,
-      borderRadius: radius.md,
+      borderRadius: radius.md + PADDING,
       padding: PADDING,
     },
     thumb: {
@@ -102,11 +102,11 @@ const makeStyles = (t: Theme) =>
       left: PADDING,
       bottom: PADDING,
       backgroundColor: t.colors.surface,
-      borderRadius: radius.md - PADDING,
+      borderRadius: radius.md,
     },
     segment: {
       flex: 1,
-      height: 38,
+      height: 40,
       alignItems: 'center',
       justifyContent: 'center',
     },

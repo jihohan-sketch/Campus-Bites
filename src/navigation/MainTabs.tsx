@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Platform, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CONTENT_MAX_WIDTH } from '../components/Screen';
+import { backdropBlur } from '../components/Card';
 import { USE_NATIVE_DRIVER } from '../components/motion';
 import { CafeteriaScreen } from '../screens/main/CafeteriaScreen';
 import { MealsScreen } from '../screens/main/MealsScreen';
@@ -22,6 +23,9 @@ const ICONS: Record<
   Cafeteria: ['people', 'people-outline'],
   Profile: ['ellipsis-horizontal-circle', 'ellipsis-horizontal-circle-outline'],
 };
+
+/** The bar's own height, before the safe-area gap underneath it. */
+const BAR_HEIGHT = 66;
 
 /**
  * The selected tab's icon lifts and settles on a tinted pill, so switching
@@ -70,8 +74,16 @@ function TabIcon({
   );
 }
 
+/**
+ * A floating island bar rather than a full-width strip welded to the bottom
+ * edge. The page scrolls underneath it and out past its sides, which is what
+ * makes the app feel like it has depth instead of two stacked rectangles — and
+ * on a desktop browser it keeps the chrome the same width as the content.
+ */
 export function MainTabs() {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const floatGap = Math.max(insets.bottom, space(3));
 
   return (
     <Tab.Navigator
@@ -82,16 +94,19 @@ export function MainTabs() {
         tabBarActiveTintColor: theme.colors.brand,
         tabBarInactiveTintColor: theme.colors.textMuted,
         tabBarLabelStyle: { ...type.caption, fontWeight: '700', marginTop: 2 },
-        tabBarItemStyle: { paddingVertical: space(1) },
+        tabBarItemStyle: { paddingVertical: space(1.5) },
         tabBarStyle: {
           position: 'absolute',
           backgroundColor: 'transparent',
           borderTopWidth: 0,
           elevation: 0,
-          height: Platform.OS === 'ios' ? 88 : 68,
-          paddingTop: space(2),
+          height: BAR_HEIGHT,
+          bottom: floatGap,
+          paddingTop: space(1.5),
+          paddingBottom: space(1.5),
           // Matches the capped content column so the bar does not run the full
-          // width of a desktop browser window.
+          // width of a desktop browser window, with a gutter either side so it
+          // reads as floating over the page rather than bolted to it.
           //
           // The navigator pins the bar with `start: 0`/`end: 0`, which makes it
           // absolutely positioned on both edges — `alignSelf` is ignored once
@@ -99,27 +114,22 @@ export function MainTabs() {
           // edge of a wide window instead of under the content column. Auto
           // horizontal margins are what actually centre an absolutely
           // positioned, width-capped box, in Yoga and in CSS alike.
-          width: '100%',
-          maxWidth: CONTENT_MAX_WIDTH,
+          width: '90%',
+          maxWidth: CONTENT_MAX_WIDTH - space(10),
           marginHorizontal: 'auto',
         },
-        // A frosted bar over a fade-to-background, so content scrolls under it.
         tabBarBackground: () => (
-          <View style={StyleSheet.absoluteFill}>
-            <LinearGradient
-              colors={['transparent', theme.colors.background]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 0.55 }}
-              style={StyleSheet.absoluteFill}
-            />
-            <View
-              style={[
-                StyleSheet.absoluteFill,
-                styles.bar,
-                { backgroundColor: theme.colors.glass, borderTopColor: theme.colors.border },
-              ]}
-            />
-          </View>
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              styles.bar,
+              theme.shadow.lg,
+              {
+                backgroundColor: theme.colors.glass,
+                borderColor: theme.colors.glassBorder,
+              },
+            ]}
+          />
         ),
         tabBarIcon: ({ focused, color, size }) => (
           <TabIcon name={route.name} focused={focused} color={color} size={size} />
@@ -136,10 +146,19 @@ export function MainTabs() {
 const styles = StyleSheet.create({
   iconWrap: {
     width: 46,
-    height: 30,
+    height: 28,
     borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  bar: { borderTopWidth: StyleSheet.hairlineWidth },
+  bar: {
+    borderRadius: radius.xxl,
+    borderWidth: StyleSheet.hairlineWidth,
+    // Native cannot blur what is behind it, so the translucent fill above is
+    // the whole effect there; the web build gets the real frost.
+    ...backdropBlur,
+    // A rounded bar has to clip its own fill, and on Android the shadow needs
+    // the elevation that `overflow: hidden` would otherwise drop.
+    ...Platform.select({ android: {}, default: { overflow: 'hidden' } }),
+  },
 });

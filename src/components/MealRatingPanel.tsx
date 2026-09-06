@@ -13,7 +13,7 @@ import { MEAL_TAGS, RATING_COMMENT_LIMIT } from '../services/ratings';
 import { radius, space, type as text, useStyles, useTheme, type Theme } from '../theme';
 import type { Meal, MealRatingSummary, MealTag, MealType, StarValue, UserProfile } from '../types';
 import { formatRelativeTime } from '../utils/date';
-import { foodEmoji } from '../utils/foodIcon';
+import { DishImage } from './DishImage';
 import { PressableScale, USE_NATIVE_DRIVER, useAnimatedTo, useChangeFade } from './motion';
 
 const STAR_ROWS: StarValue[] = [5, 4, 3, 2, 1];
@@ -104,7 +104,7 @@ export function MealRatingPanel({
       <View style={styles.header}>
         <View style={styles.titleRow}>
           <Text style={styles.titleEmoji}>🍱</Text>
-          <Text style={[text.subheading, styles.title]}>{dayLabel} 급식 평가</Text>
+          <Text style={[text.subheading, styles.title]}>{dayLabel} 메뉴 평가</Text>
         </View>
         <View style={styles.headerChips}>
           {localOnly ? <Pill label="이 기기에만 저장" /> : null}
@@ -116,12 +116,12 @@ export function MealRatingPanel({
         <View style={styles.menuRow}>
           {dishes.slice(0, 6).map((dish, index) => (
             <View key={`${dish.name}-${index}`} style={styles.menuChip}>
-              <Text style={styles.menuChipEmoji}>{foodEmoji(dish.name)}</Text>
+              <DishImage name={dish.name} size={22} tint={theme.soft} round={radius.pill} />
               <Text style={[text.caption, styles.menuChipText]}>{dish.name}</Text>
             </View>
           ))}
           {dishes.length > 6 ? (
-            <Text style={[text.caption, styles.menuMore]}>외 {dishes.length - 6}가지</Text>
+            <Text style={[text.caption, styles.menuMore]}>+{dishes.length - 6}개</Text>
           ) : null}
         </View>
       ) : (
@@ -219,13 +219,13 @@ export function MealRatingPanel({
           </View>
           <StarRating value={mine.stars} size={18} />
           {mine.comment ? <Text style={[text.body, styles.mineComment]}>{mine.comment}</Text> : null}
-          <Text style={[text.caption, styles.mineHint]}>한 급식당 한 번만 평가할 수 있어요</Text>
+          <Text style={[text.caption, styles.mineHint]}>한 끼당 한 번만 평가할 수 있어요</Text>
         </View>
       ) : !ratable ? (
         // A future service can be read but not scored, the same rule the card
         // on 급식표 follows.
         <View style={styles.signInCta}>
-          <Text style={[text.caption, styles.signInHint]}>아직 평가할 수 없는 급식이에요</Text>
+          <Text style={[text.caption, styles.signInHint]}>아직 먹기 전이라 평가할 수 없어요</Text>
           {onGoToToday ? (
             <Button label="오늘로 이동" variant="secondary" onPress={onGoToToday} fullWidth />
           ) : null}
@@ -233,7 +233,7 @@ export function MealRatingPanel({
       ) : canRate ? (
         <View style={styles.signInCta}>
           <Button
-            label={`${dayLabel} 급식 평가하기`}
+            label={`${dayLabel} 메뉴 평가하기`}
             onPress={() => toggleComposer(true)}
             size="lg"
             fullWidth
@@ -340,7 +340,7 @@ function ScoreBlock({
           <Text style={styles.scoreOutOf}> / 5</Text>
         </Text>
         <Text style={[text.caption, styles.scoreCount]}>
-          {loading ? '불러오는 중…' : `${summary.count}개 평가`}
+          {loading ? '불러오는 중…' : `평가 ${summary.count}개`}
         </Text>
       </Animated.View>
 
@@ -426,10 +426,10 @@ const makeStyles = (t: Theme) =>
       gap: space(1),
       backgroundColor: t.colors.surfaceMuted,
       borderRadius: radius.pill,
-      paddingHorizontal: space(2.5),
-      paddingVertical: space(1.5),
+      paddingLeft: space(1),
+      paddingRight: space(2.5),
+      paddingVertical: space(1),
     },
-    menuChipEmoji: { fontSize: 12 },
     menuChipText: { color: t.colors.textSecondary, fontWeight: '600' },
     menuMore: { color: t.colors.textMuted },
 

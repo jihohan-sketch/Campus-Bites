@@ -66,7 +66,7 @@ export function CafeteriaScreen(_props: Props) {
             </Text>
             <Text style={[text.hero, styles.title]}>급식실 현황</Text>
             <Text style={[text.body, styles.subtitle]}>
-              줄 서는 시간과 급식 평가를 한눈에
+              줄은 얼마나 긴지, 오늘 메뉴는 어땠는지 한눈에
             </Text>
           </View>
         </FadeIn>
@@ -78,7 +78,7 @@ export function CafeteriaScreen(_props: Props) {
         <FadeIn index={2}>
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={[text.overline, styles.sectionTitle]}>실시간 제보 기반 혼잡도</Text>
+              <Text style={[text.overline, styles.sectionTitle]}>지금 혼잡도</Text>
               <Pill label={`최근 ${Math.round(CROWD_WINDOW_MS / 60000)}분`} />
             </View>
 

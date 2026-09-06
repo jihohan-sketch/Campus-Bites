@@ -39,7 +39,7 @@ const BLOCKS = Array.from({ length: BLOCK_COUNT }, (_, index) => index);
 interface LunchLineLiveProps {
   /** Overrides the live KST clock; used for previews and tests. */
   nowMinutes?: number;
-  /** Drops the band legend for the tighter slot on 급식표. */
+  /** Drops the band legend for the tighter slot on the menu screen. */
   compact?: boolean;
   /** Dims the card and stops the ticker when the student is on another day. */
   muted?: boolean;
@@ -68,7 +68,7 @@ export function LunchLineLive({ nowMinutes, compact = false, muted = false }: Lu
       <View style={styles.header}>
         <View style={styles.titleRow}>
           <Text style={styles.titleEmoji}>🍽️</Text>
-          <Text style={[text.subheading, styles.title]}>실시간 급식 줄</Text>
+          <Text style={[text.subheading, styles.title]}>지금 급식 줄</Text>
         </View>
         {isLive ? <LiveBadge /> : <EstimateChip />}
       </View>

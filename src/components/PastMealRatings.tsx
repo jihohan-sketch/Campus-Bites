@@ -9,7 +9,7 @@ import { fetchSummaries } from '../services/ratings';
 import { radius, space, type as text, useStyles, useTheme, type Theme } from '../theme';
 import type { MealRatingSummary, MealType } from '../types';
 import { addDays, fromYmd, toYmd, weekdayName, type CivilDate } from '../utils/date';
-import { foodEmoji } from '../utils/foodIcon';
+import { DishImage } from './DishImage';
 import { FadeIn } from './motion';
 
 interface PastMealRatingsProps {
@@ -85,7 +85,7 @@ export function PastMealRatings({
         .map<HistoryRow>((ymd) => {
           const meal = meals.find((entry) => entry.date === ymd) ?? null;
           // The main dish is usually the second line, after the rice.
-          const headline = meal?.dishes[1]?.name ?? meal?.dishes[0]?.name ?? '메뉴 정보 없음';
+          const headline = meal?.dishes[1]?.name ?? meal?.dishes[0]?.name ?? '';
           return {
             date: ymd,
             label: labelOf(ymd),
@@ -117,9 +117,9 @@ export function PastMealRatings({
     <View style={[styles.card, t.shadow.sm]}>
       <View style={styles.header}>
         <Text style={styles.titleEmoji}>🏆</Text>
-        <Text style={[text.subheading, styles.title]}>지난 급식 순위</Text>
-        {/* Which service is being ranked, so an empty 조식 list does not read
-            as "nobody has ever rated anything". */}
+        <Text style={[text.subheading, styles.title]}>지난 메뉴 랭킹</Text>
+        {/* Which service is being ranked, so an empty Breakfast list does not
+            read as "nobody has ever rated anything". */}
         <Pill
           label={t.meal[mealType].label}
           color={t.meal[mealType].tint}
@@ -132,6 +132,7 @@ export function PastMealRatings({
           {[0, 1, 2].map((line) => (
             <View key={line} style={styles.skeletonRow}>
               <Skeleton width={28} height={28} round={10} />
+              <Skeleton width={38} height={38} round={12} />
               <View style={styles.skeletonText}>
                 <Skeleton width="58%" height={14} />
                 <Skeleton width="34%" height={11} />
@@ -142,7 +143,7 @@ export function PastMealRatings({
         </View>
       ) : rows.length === 0 ? (
         <Text style={[text.caption, styles.empty]}>
-          아직 비교할 지난 평가가 없어요. 매일 평가가 쌓이면 여기에 순위가 생겨요.
+          아직 쌓인 평가가 없어요. 평가가 모이면 여기에 랭킹이 만들어져요.
         </Text>
       ) : (
         rows.map((row, index) => (
@@ -154,12 +155,16 @@ export function PastMealRatings({
                 </Text>
               </View>
 
+              {row.headline ? (
+                <DishImage name={row.headline} size={38} tint={t.meal[mealType].soft} />
+              ) : null}
+
               <View style={styles.rowBody}>
                 <Text style={[text.bodyStrong, styles.headline]} numberOfLines={1}>
-                  {foodEmoji(row.headline)} {row.headline}
+                  {row.headline || '메뉴 정보 없음'}
                 </Text>
                 <Text style={[text.caption, styles.meta]}>
-                  {row.label} · {row.summary.count}개 평가
+                  {row.label} · 평가 {row.summary.count}개
                 </Text>
               </View>
 
