@@ -122,9 +122,14 @@ export function MealCard({ type, meal, onPress, isCurrent = false }: MealCardPro
               <View />
             )}
             {interactive ? (
+              // The bundled 식단표 carries dish names and allergen codes and
+              // nothing else — no nutrition table, no 원산지 — so the label
+              // names what the detail page actually shows. If a data source
+              // with those fields is ever wired up, `Meal.nutrition` and
+              // `Meal.origins` already render there and this can go back.
               <View style={[styles.detailLink, { backgroundColor: theme.soft }]}>
                 <Text style={[text.caption, { color: theme.tint, fontWeight: '700' }]}>
-                  영양 · 원산지
+                  자세히 보기
                 </Text>
                 <Ionicons name="chevron-forward" size={11} color={theme.tint} />
               </View>
