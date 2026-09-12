@@ -7,6 +7,7 @@ import { schoolKeyOf } from '../../config/school';
 import { AuthPrompt } from '../../components/AuthPrompt';
 import { Button } from '../../components/Button';
 import { CrowdLevelPicker } from '../../components/CrowdLevelPicker';
+import { MadeBy } from '../../components/MadeBy';
 import { Screen } from '../../components/Screen';
 import { SegmentedControl } from '../../components/SegmentedControl';
 import { TextField } from '../../components/TextField';
@@ -155,6 +156,8 @@ function CrowdReportForm({
           <Text style={[text.caption, styles.disclaimer]}>
             제보에는 이름과 이모지가 함께 표시되고, 같은 학교 학생만 볼 수 있어요.
           </Text>
+
+          <MadeBy />
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>

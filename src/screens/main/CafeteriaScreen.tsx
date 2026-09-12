@@ -11,6 +11,7 @@ import { Button } from '../../components/Button';
 import { CrowdMeter } from '../../components/CrowdMeter';
 import { EmptyState } from '../../components/EmptyState';
 import { LunchLineLive } from '../../components/LunchLineLive';
+import { MadeBy } from '../../components/MadeBy';
 import { MealRatingPanel } from '../../components/MealRatingPanel';
 import { PastMealRatings } from '../../components/PastMealRatings';
 import { Pill } from '../../components/Pill';
@@ -171,6 +172,8 @@ export function CafeteriaScreen(_props: Props) {
         />
 
         <PastMealRatings schoolKey={schoolKey} today={today} mealType={currentService} uid={uid} />
+
+        <MadeBy />
       </ScrollView>
     </Screen>
   );

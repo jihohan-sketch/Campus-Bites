@@ -10,6 +10,7 @@ import { CrowdMeter } from '../../components/CrowdMeter';
 import { DayNavigator } from '../../components/DayNavigator';
 import { EmptyState } from '../../components/EmptyState';
 import { LunchLineLive } from '../../components/LunchLineLive';
+import { MadeBy } from '../../components/MadeBy';
 import { MealCard } from '../../components/MealCard';
 import { MealTypeTabs } from '../../components/MealTypeTabs';
 import { PastMealRatings } from '../../components/PastMealRatings';
@@ -244,6 +245,8 @@ export function MealsScreen(_props: Props) {
             uid={profile?.uid ?? null}
           />
         </FadeIn>
+
+        <MadeBy />
       </ScrollView>
     </Screen>
   );

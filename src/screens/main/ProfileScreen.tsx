@@ -8,6 +8,7 @@ import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Avatar } from '../../components/Avatar';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
+import { MadeBy } from '../../components/MadeBy';
 import { Pill } from '../../components/Pill';
 import { Screen } from '../../components/Screen';
 import { FadeIn, PressableScale } from '../../components/motion';
@@ -109,6 +110,8 @@ export function ProfileScreen(_props: Props) {
               </Text>
             </View>
           )}
+
+          <MadeBy />
         </ScrollView>
       </Screen>
     );
@@ -204,6 +207,8 @@ export function ProfileScreen(_props: Props) {
         </View>
 
         <Button label="로그아웃" variant="danger" onPress={confirmSignOut} fullWidth />
+
+        <MadeBy />
       </ScrollView>
     </Screen>
   );

@@ -5,6 +5,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } fr
 
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
+import { MadeBy } from '../../components/MadeBy';
 import { Screen } from '../../components/Screen';
 import { TextField } from '../../components/TextField';
 import { APP_SCHOOL, APP_SCHOOL_EN } from '../../config/school';
@@ -117,6 +118,8 @@ export function SchoolSetupScreen({ navigation, route }: Props) {
           {mode === 'onboarding' ? (
             <Button label="나중에 하기" variant="ghost" onPress={close} fullWidth />
           ) : null}
+
+          <MadeBy />
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>

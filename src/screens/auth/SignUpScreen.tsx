@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 
 import { Button } from '../../components/Button';
+import { MadeBy } from '../../components/MadeBy';
 import { Screen } from '../../components/Screen';
 import { TextField } from '../../components/TextField';
 import { describeAuthError } from '../../config/firebase';
@@ -172,6 +173,8 @@ export function SignUpScreen({ navigation }: Props) {
               <Text style={[text.bodyStrong, styles.switchLink]}>로그인</Text>
             </Pressable>
           </View>
+
+          <MadeBy />
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>

@@ -13,6 +13,7 @@ import {
 
 import { AuthPrompt } from '../../components/AuthPrompt';
 import { Button } from '../../components/Button';
+import { MadeBy } from '../../components/MadeBy';
 import { Screen } from '../../components/Screen';
 import { TextField } from '../../components/TextField';
 import { describeAuthError } from '../../config/firebase';
@@ -138,6 +139,8 @@ export function EditProfileScreen({ navigation }: Props) {
             size="lg"
             fullWidth
           />
+
+          <MadeBy />
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>

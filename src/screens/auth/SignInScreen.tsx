@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 
 import { Button } from '../../components/Button';
+import { MadeBy } from '../../components/MadeBy';
 import { Screen } from '../../components/Screen';
 import { TextField } from '../../components/TextField';
 import { APP_NAME, APP_SCHOOL_EMAIL_DOMAIN } from '../../config/school';
@@ -187,6 +188,8 @@ export function SignInScreen({ navigation }: Props) {
             ) : null}
           </View>
           )}
+
+          <MadeBy />
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>

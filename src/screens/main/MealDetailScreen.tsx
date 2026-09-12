@@ -5,6 +5,7 @@ import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { Card } from '../../components/Card';
+import { MadeBy } from '../../components/MadeBy';
 import { Pill } from '../../components/Pill';
 import { CONTENT_MAX_WIDTH, Screen } from '../../components/Screen';
 import { FadeIn } from '../../components/motion';
@@ -180,6 +181,8 @@ export function MealDetailScreen({ route }: Props) {
 
         <Text style={[text.caption, styles.source]}>※ {MENU_DISCLAIMER}</Text>
         <Text style={[text.caption, styles.source]}>자료 출처: {meal.schoolName} 식단표</Text>
+
+        <MadeBy style={styles.credit} />
       </ScrollView>
     </Screen>
   );
@@ -319,4 +322,6 @@ const makeStyles = (t: Theme) =>
     infoValue: { color: t.colors.text, textAlign: 'right' },
 
     source: { color: t.colors.textMuted, paddingHorizontal: space(5), marginTop: space(1) },
+    // The page is full-bleed, so the credit brings its own gutter.
+    credit: { paddingHorizontal: space(5) },
   });
