@@ -200,6 +200,17 @@ const OVERRIDES: Record<string, DishImageOverride> = {
       'a bowl of Japanese udon noodle soup, thick white wheat noodles in clear ' +
       'broth, spring onion on top',
   },
+  // "Tteokbokki" is a name the model does not know; it drew noodle soup.
+  국물떡볶이: {
+    prompt:
+      'Korean tteokbokki, chewy white cylindrical rice cakes and fish cake ' +
+      'slices in a glossy bright red spicy gochujang sauce, in a shallow bowl',
+  },
+  // Cloudflare's safety filter misreads "Chicken Nuggets with Mustard" and
+  // refuses it outright; describing the plate gets past it.
+  '치킨너겟 & 머스터드': {
+    prompt: 'golden breaded chicken nuggets with a small side dish of yellow mustard sauce',
+  },
   // The one dish the generator would not draw. "Banana" alone gave an empty
   // white plate, and describing it gave surreal yellow rings — a plain piece
   // of fruit turns out to be harder for it than a plated Korean main. Pinned

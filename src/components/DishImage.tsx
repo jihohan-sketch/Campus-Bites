@@ -4,6 +4,7 @@ import { Animated, Image, Platform, StyleSheet, Text, View, type DimensionValue 
 
 import { radius, useStyles, useTheme, type Theme } from '../theme';
 import { foodEmoji } from '../utils/foodIcon';
+import { DISH_PHOTOS } from '../utils/dishPhotos';
 import { dishImageUrl } from '../utils/foodImage';
 import { USE_NATIVE_DRIVER } from './motion';
 
@@ -144,6 +145,14 @@ export function DishImage({
   // A wide box is cropped from a square, so the picture has to be requested at
   // the long edge or it arrives soft.
   const longEdge = Math.max(boxHeight, typeof width === 'number' ? width : size);
+  /**
+   * A photo shipped inside the app (see `scripts/bundle-dish-images.mjs`).
+   * The generator's free tier draws one new picture per 45 seconds per IP and
+   * refuses the rest, so a menu nobody had warmed showed nothing but emoji;
+   * a bundled photo never touches it. Anything not bundled still falls back
+   * to the generator.
+   */
+  const bundled = DISH_PHOTOS[name.replace(/\s+/g, '')];
   const full = requestSize(longEdge);
   /**
    * A hero asks for a size no thumbnail uses, and the generator draws — and
@@ -152,7 +161,7 @@ export function DishImage({
    * it: the picture is on screen immediately and simply gets crisper, instead
    * of the card sitting on a flat colour while a 512 waits behind a 429.
    */
-  const preview = full > PREVIEW_STEP ? dishImageUrl(name, PREVIEW_STEP) : null;
+  const preview = bundled || full <= PREVIEW_STEP ? null : dishImageUrl(name, PREVIEW_STEP);
 
   return (
     <View
@@ -187,7 +196,7 @@ export function DishImage({
             // Remounting is what actually re-issues the request; the URL is
             // unchanged, so a picture that exists by then comes from cache.
             key={attempt}
-            source={{ uri: dishImageUrl(name, full) }}
+            source={bundled ?? { uri: dishImageUrl(name, full) }}
             style={[StyleSheet.absoluteFill, { borderRadius: corner }]}
             resizeMode="cover"
             onLoad={() => setLoaded(true)}
