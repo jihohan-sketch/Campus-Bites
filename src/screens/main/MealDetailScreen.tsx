@@ -44,6 +44,10 @@ export function MealDetailScreen({ route }: Props) {
   const heroHeight = Math.round(
     Math.max(230, Math.min(330, Math.min(width, CONTENT_MAX_WIDTH) * 0.72)),
   );
+  // Each dish photo takes the larger part of its tile, with the text beside it.
+  const thumbSize = Math.round(
+    Math.max(128, Math.min(190, (Math.min(width, CONTENT_MAX_WIDTH) - space(10)) * 0.44)),
+  );
 
   return (
     <Screen topInset={false}>
@@ -110,15 +114,12 @@ export function MealDetailScreen({ route }: Props) {
         </View>
 
         <Section title="오늘 나오는 메뉴" index={0}>
-          <Card padded={false}>
+          <View style={styles.dishList}>
             {meal.dishes.map((dish, index) => (
-              <View
-                key={`${dish.name}-${index}`}
-                style={[styles.dishRow, index > 0 ? styles.dishRowDivided : null]}
-              >
-                <DishImage name={dish.name} size={64} tint={theme.soft} round={radius.md} />
+              <View key={`${dish.name}-${index}`} style={styles.dishRow}>
+                <DishImage name={dish.name} size={thumbSize} tint={theme.soft} round={0} />
                 <View style={styles.dishText}>
-                  <Text style={[text.bodyStrong, styles.dishName]}>{dish.name}</Text>
+                  <Text style={[text.heading, styles.dishName]}>{dish.name}</Text>
                   {englishDishName(dish.name) ? (
                     <Text style={[text.caption, styles.dishNameEn]}>
                       {englishDishName(dish.name)}
@@ -139,7 +140,7 @@ export function MealDetailScreen({ route }: Props) {
                 </View>
               </View>
             ))}
-          </Card>
+          </View>
         </Section>
 
         {allergens.length > 0 ? (
@@ -285,15 +286,18 @@ const makeStyles = (t: Theme) =>
     section: { paddingHorizontal: space(5), gap: space(2.5) },
     sectionTitle: { color: t.colors.textSecondary, paddingLeft: space(0.5) },
 
+    dishList: { gap: space(3) },
     dishRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: space(3.5),
-      paddingVertical: space(3.5),
-      paddingHorizontal: space(4.5),
+      gap: space(4),
+      backgroundColor: t.colors.surface,
+      borderRadius: radius.xl,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: t.colors.border,
+      overflow: 'hidden',
     },
-    dishRowDivided: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.colors.divider },
-    dishText: { flex: 1, gap: space(1.5) },
+    dishText: { flex: 1, gap: space(1.5), paddingRight: space(4), paddingVertical: space(3.5) },
     dishName: { color: t.colors.text },
     dishNameEn: { color: t.colors.textSecondary },
     dishAllergens: { flexDirection: 'row', flexWrap: 'wrap', gap: space(1.5) },

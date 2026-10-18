@@ -24,10 +24,12 @@ interface MealCardProps {
 const DISH_PREVIEW_LIMIT = 6;
 
 /**
- * Thumbnails grow a little once there is room for them — a phone keeps the
- * compact row, a tablet or a desktop browser gets a picture worth looking at.
+ * Each dish photo's share of the row it sits in. The photo is what students
+ * look at, so it takes the larger part of the tile and the text sits beside it.
  */
-const NARROW_MAX = 400;
+const THUMB_RATIO = 0.42;
+const THUMB_MIN = 120;
+const THUMB_MAX = 176;
 
 /** The page gutter either side of the card, so the hero can size itself. */
 const PAGE_GUTTER = space(10);
@@ -56,9 +58,10 @@ export function MealCard({ type, meal, onPress, isCurrent = false }: MealCardPro
   const theme = t.meal[type];
   const { width } = useWindowDimensions();
 
-  const compact = width <= NARROW_MAX;
-  const thumbSize = compact ? 56 : 64;
   const cardWidth = Math.min(width, CONTENT_MAX_WIDTH) - PAGE_GUTTER;
+  const thumbSize = Math.round(
+    Math.max(THUMB_MIN, Math.min(THUMB_MAX, (cardWidth - space(9)) * THUMB_RATIO)),
+  );
   const heroHeight = Math.round(
     Math.max(HERO_MIN, Math.min(HERO_MAX, cardWidth * HERO_RATIO)),
   );
@@ -162,18 +165,20 @@ export function MealCard({ type, meal, onPress, isCurrent = false }: MealCardPro
 
           {visible.map((dish, index) => (
             <View key={`${dish.name}-${index}`} style={styles.dishRow}>
-              <DishImage name={dish.name} size={thumbSize} tint={theme.soft} round={radius.md} />
+              <DishImage name={dish.name} size={thumbSize} tint={theme.soft} round={0} />
               <View style={styles.dishText}>
-                <Text style={[text.bodyStrong, styles.dishName]}>{dish.name}</Text>
+                <Text style={[text.heading, styles.dishName]} numberOfLines={2}>
+                  {dish.name}
+                </Text>
                 {/* VIS is an international school, so the English name sits
                     under every dish rather than behind a language switch. */}
                 {englishDishName(dish.name) ? (
-                  <Text style={[text.caption, styles.dishNameEn]} numberOfLines={1}>
+                  <Text style={[text.caption, styles.dishNameEn]} numberOfLines={2}>
                     {englishDishName(dish.name)}
                   </Text>
                 ) : null}
                 {dish.allergens.length > 0 ? (
-                  <Text style={[text.caption, styles.allergens]} numberOfLines={1}>
+                  <Text style={[text.caption, styles.allergens]} numberOfLines={2}>
                     {dish.allergens.map(allergenLabel).join(' · ')}
                   </Text>
                 ) : null}
@@ -182,7 +187,7 @@ export function MealCard({ type, meal, onPress, isCurrent = false }: MealCardPro
           ))}
 
           {hidden > 0 ? (
-            <View style={[styles.moreRow, { paddingLeft: thumbSize + space(3.5) }]}>
+            <View style={styles.moreRow}>
               <Text style={[text.caption, styles.more]}>메뉴 {hidden}개 더 있어요</Text>
             </View>
           ) : null}
@@ -325,12 +330,19 @@ const makeStyles = (t: Theme) =>
     bodyTitle: { color: t.colors.textSecondary },
     bodyCount: { color: t.colors.textMuted, letterSpacing: 0 },
 
-    dishRow: { flexDirection: 'row', alignItems: 'center', gap: space(3.5) },
-    dishText: { flex: 1, gap: 1 },
+    dishRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: space(4),
+      backgroundColor: t.colors.surfaceSunken,
+      borderRadius: radius.lg,
+      overflow: 'hidden',
+    },
+    dishText: { flex: 1, gap: space(1), paddingRight: space(3), paddingVertical: space(3) },
     dishName: { color: t.colors.text },
     dishNameEn: { color: t.colors.textSecondary },
     allergens: { color: t.colors.textMuted },
-    moreRow: { marginTop: -space(1) },
+    moreRow: { alignItems: 'center' },
     more: { color: t.colors.textSecondary, fontWeight: '600' },
 
     footer: {

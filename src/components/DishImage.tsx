@@ -197,7 +197,17 @@ export function DishImage({
             // unchanged, so a picture that exists by then comes from cache.
             key={attempt}
             source={bundled ?? { uri: dishImageUrl(name, full) }}
-            style={[StyleSheet.absoluteFill, { borderRadius: corner }]}
+            // A bundled asset carries its own 512x512 size, which web applies
+            // as the image's width and height unless the style sets one — so
+            // the tile showed the white corner of a 512px photo. Size it.
+            style={[
+              StyleSheet.absoluteFill,
+              styles.fill,
+              { borderRadius: corner },
+              // The bundled photos are a centred plate on a wide white margin;
+              // cropping in lets the food, not the background, fill the tile.
+              bundled ? styles.cropIn : null,
+            ]}
             resizeMode="cover"
             onLoad={() => setLoaded(true)}
             onError={onError}
@@ -232,4 +242,6 @@ const makeStyles = (t: Theme) =>
       borderColor: t.colors.border,
     },
     emoji: { opacity: 0.75 },
+    fill: { width: '100%', height: '100%' },
+    cropIn: { transform: [{ scale: 1.3 }] },
   });
