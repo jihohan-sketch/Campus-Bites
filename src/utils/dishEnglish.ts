@@ -14,6 +14,7 @@
 
 const DISH_EN: Record<string, string> = {
   // 밥 · 면 · 죽
+  나물비빔밥: 'Bibimbap with Seasoned Vegetables',
   백미밥: 'Steamed White Rice',
   잡곡밥: 'Multigrain Rice',
   김가루밥: 'Rice with Seaweed Flakes',
@@ -61,6 +62,13 @@ const DISH_EN: Record<string, string> = {
   '양념깻잎 & 기름막국수': 'Seasoned Perilla Leaves with Oil Buckwheat Noodles',
 
   // 국 · 찌개 · 탕
+  샤브샤브국: 'Shabu-shabu Soup',
+  바지락순두국: 'Clam Soft Tofu Soup',
+  돼지국밥: 'Pork Soup with Rice',
+  물만두국: 'Boiled Dumpling Soup',
+  물떡꼬치국: 'Rice Cake Skewer Soup',
+  시금치된장국: 'Spinach Soybean Paste Soup',
+  짬뽕국: 'Spicy Seafood Noodle Soup (Jjamppong Broth)',
   계란국: 'Egg Drop Soup',
   어묵국: 'Fish Cake Soup',
   돼지어묵국: 'Pork and Fish Cake Soup',
@@ -121,6 +129,10 @@ const DISH_EN: Record<string, string> = {
   닭볶음탕: 'Spicy Braised Chicken',
 
   // 육류 주요리
+  '치킨마크니커리 & 또띠아': 'Chicken Makhani Curry with Tortilla',
+  돈간장불고기: 'Soy Sauce Pork Bulgogi',
+  돈장조림: 'Soy-braised Pork',
+  크림카레떡볶이: 'Cream Curry Tteokbokki',
   소불고기: 'Beef Bulgogi',
   간장불고기: 'Soy-Marinated Bulgogi',
   돈육간장불고기: 'Soy-Marinated Pork Bulgogi',
@@ -194,6 +206,11 @@ const DISH_EN: Record<string, string> = {
   '슬라이스햄 & 체다치즈': 'Sliced Ham and Cheddar Cheese',
 
   // 생선 · 튀김
+  오징어떡볶음: 'Stir-fried Squid and Rice Cakes',
+  '고구마고로케 & 케찹': 'Sweet Potato Croquette with Ketchup',
+  뿌링클감자튀김: 'Bburinkle Cheese-seasoned Fries',
+  모짜렐라치즈볼: 'Mozzarella Cheese Balls',
+  고구마맛탕: 'Candied Sweet Potatoes',
   삼치카레구이: 'Curry-Grilled Mackerel',
   '생선까스 & 타르타르': 'Fish Cutlet with Tartar Sauce',
   '생선까스 & 양파드레싱': 'Fish Cutlet with Onion Dressing',
@@ -234,6 +251,10 @@ const DISH_EN: Record<string, string> = {
   라이스찹고구마볼: 'Crispy Rice Sweet Potato Balls',
 
   // 전 · 부침 · 사이드
+  해물땡전: 'Seafood Mini Pancakes (Ttaengjeon)',
+  김치메밀전병: 'Kimchi Buckwheat Crepe Rolls',
+  '계란후라이 & 약고추장': 'Fried Egg with Seasoned Gochujang',
+  청경채굴소스찜: 'Steamed Bok Choy with Oyster Sauce',
   해물파전: 'Seafood Scallion Pancake',
   오징어김치전: 'Squid Kimchi Pancake',
   베이컨감자전: 'Bacon Potato Pancake',
@@ -277,6 +298,8 @@ const DISH_EN: Record<string, string> = {
   팍팍장: 'Spicy Soybean Paste Sauce',
 
   // 나물 · 무침 · 김치
+  오이탕탕이: 'Smashed Cucumber Salad',
+  오이부추무침: 'Seasoned Cucumber and Chives',
   포기김치: 'Napa Cabbage Kimchi',
   깍두기: 'Diced Radish Kimchi',
   콩나물무침: 'Seasoned Bean Sprouts',
