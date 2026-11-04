@@ -367,6 +367,24 @@ const DISH_EN: Record<string, string> = {
   매실잼: 'Plum Jam',
   바나나: 'Banana',
   과일: 'Fresh Fruit',
+
+  // 11월 식단표 수정본
+  '삶은 단팥': 'Boiled Sweet Red Beans',
+  바지락순두부국: 'Clam Soft Tofu Soup',
+  '치킨마요커리 & 또띠아': 'Chicken Mayo Curry with Tortilla',
+  고구마치즈돈까스: 'Sweet Potato Cheese Pork Cutlet',
+  오징어먹물볶음: 'Stir-fried Squid in Squid Ink',
+  물만둣국: 'Boiled Dumpling Soup',
+  쫄면무침: 'Spicy Chewy Noodle Salad',
+  돈코츠라멘: 'Tonkotsu Ramen',
+  '멘보샤 & 소스': 'Shrimp Toast with Sauce',
+  모닝빵참치포테이토: 'Dinner Roll with Tuna Potato Salad',
+  '베이글 & 스키잼': 'Bagel with Jam',
+  묵은지닭볶음탕: 'Spicy Braised Chicken with Aged Kimchi',
+  얼갈이된장국: 'Young Cabbage Soybean Paste Soup',
+  돈사태떡조림: 'Braised Pork Shank with Rice Cake',
+  감바스: 'Gambas al Ajillo (Garlic Shrimp)',
+  애호박새우젓볶음: 'Zucchini Stir-fried with Salted Shrimp',
 };
 
 /** Collapses runs of whitespace; the readable key used for the primary match. */
