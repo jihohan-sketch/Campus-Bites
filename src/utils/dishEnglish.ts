@@ -385,6 +385,25 @@ const DISH_EN: Record<string, string> = {
   돈사태떡조림: 'Braised Pork Shank with Rice Cake',
   감바스: 'Gambas al Ajillo (Garlic Shrimp)',
   애호박새우젓볶음: 'Zucchini Stir-fried with Salted Shrimp',
+
+  // 11월 2주차
+  '닭곰탕 & 당면': 'Chicken Soup with Glass Noodles',
+  '왕만두찜 & 양념장': 'Steamed Jumbo Dumplings with Dipping Sauce',
+  햄감자조림: 'Braised Ham and Potatoes',
+  참나물된장무침: 'Chamnamul Greens with Soybean Paste',
+  계란파국: 'Egg and Green Onion Soup',
+  시금치장볶음우동: 'Stir-fried Udon with Spinach',
+  '탕수육 & 소스': 'Sweet and Sour Pork with Sauce',
+  로제파스타: 'Rosé Pasta',
+  마늘빵: 'Garlic Bread',
+  파래김: 'Green Laver Seaweed',
+  치킨마요덮밥: 'Chicken Mayo Rice Bowl',
+  불고기퀘사디아: 'Bulgogi Quesadilla',
+  베이컨그린빈볶음: 'Stir-fried Bacon and Green Beans',
+  싸요싸요: 'Ssayo Ssayo',
+  동태찌개: 'Spicy Pollack Stew',
+  '명란한맥갈비 & 부추무침': 'Pollack Roe Galbi with Chive Salad',
+  '시금치프리타타 (계란찜)': 'Spinach Frittata (Steamed Egg)',
 };
 
 /** Collapses runs of whitespace; the readable key used for the primary match. */
