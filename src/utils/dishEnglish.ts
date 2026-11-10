@@ -386,7 +386,7 @@ const DISH_EN: Record<string, string> = {
   햄감자조림: 'Braised Ham and Potatoes',
   참나물된장무침: 'Chamnamul Greens with Soybean Paste',
   계란파국: 'Egg and Green Onion Soup',
-  시금치장볶음우동: 'Stir-fried Udon with Spinach',
+  짜장볶음우동: 'Stir-fried Udon in Black Bean Sauce',
   '탕수육 & 소스': 'Sweet and Sour Pork with Sauce',
   로제파스타: 'Rosé Pasta',
   마늘빵: 'Garlic Bread',
