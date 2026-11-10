@@ -386,7 +386,7 @@ const DISH_EN: Record<string, string> = {
   햄감자조림: 'Braised Ham and Potatoes',
   참나물된장무침: 'Chamnamul Greens with Soybean Paste',
   계란파국: 'Egg and Green Onion Soup',
-  짜장볶음우동: 'Stir-fried Udon in Black Bean Sauce',
+  사천짜장볶음우동: 'Sichuan Black Bean Stir-fried Udon',
   '탕수육 & 소스': 'Sweet and Sour Pork with Sauce',
   로제파스타: 'Rosé Pasta',
   마늘빵: 'Garlic Bread',
@@ -394,9 +394,8 @@ const DISH_EN: Record<string, string> = {
   치킨마요덮밥: 'Chicken Mayo Rice Bowl',
   불고기퀘사디아: 'Bulgogi Quesadilla',
   베이컨그린빈볶음: 'Stir-fried Bacon and Green Beans',
-  싸요싸요: 'Ssayo Ssayo',
   동태찌개: 'Spicy Pollack Stew',
-  '명란한맥갈비 & 부추무침': 'Pollack Roe Galbi with Chive Salad',
+  '명란한떡갈비 & 부추무침': 'Pollack Roe Tteokgalbi with Chive Salad',
   '시금치프리타타 (계란찜)': 'Spinach Frittata (Steamed Egg)',
 };
 
